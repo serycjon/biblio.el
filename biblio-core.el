@@ -138,7 +138,7 @@ URL and CALLBACK; see `url-queue-retrieve'"
   (let ((target))
     (save-excursion
       (funcall move-fn)
-      (funcall search-fn biblio--search-result-marker-regexp)
+      (funcall search-fn biblio--search-result-marker-regexp nil t)
       (setq target (match-end 0)))
     (goto-char target)))
 
