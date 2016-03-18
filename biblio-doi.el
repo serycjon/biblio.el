@@ -109,7 +109,7 @@ essentially a thin wrapper around `biblio-generic-url-callback'."
 (defun biblio-doi--crosscite-callback (forward-to)
   "Generate a handler for response of CrossCite server.
 FORWARD-TO is the callback to call with the results of the search."
-  (biblio-doi--generic-url-callback #'identity forward-to))
+  (biblio-doi--generic-url-callback #'ignore forward-to))
 
 (defun biblio-doi--forward-bibtex-crosscite (doi forward-to)
   "Forward BibTeX entry for DOI from CrossCite to FORWARD-TO."
