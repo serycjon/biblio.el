@@ -248,7 +248,8 @@ Interactively, query for ACTION from
   "Browse bibliographic search results.
 \\{biblio-selection-mode-map}"
   (hl-line-mode)
-  (setq truncate-lines t)
+  (setq truncate-lines nil)
+  (visual-line-mode)
   (setq-local cursor-type nil))
 
 ;;; Printing search results
@@ -285,14 +286,25 @@ Interactively, query for ACTION from
         fallback
       (biblio-string-join strs sep))))
 
-(defun biblio--insert-detail (prefix items)
+(defun biblio--insert-with-prefix (prefix &rest strs)
+  "Like INSERT with PREFIX and STRS, but set `wrap-prefix'.
+That is, the inserted text gets a `wrap-prefix' made of enough
+white space to align with the end of PREFIX."
+  (biblio--with-text-property 'wrap-prefix (make-string (length prefix) ?\s)
+    (apply #'insert prefix strs)))
+
+(defun biblio--insert-detail (prefix items newline)
   "Insert PREFIX followed by ITEMS, if ITEMS is non-empty.
-If ITEMS is a list or vector, join tis entries with “, ”."
+If ITEMS is a list or vector, join its entries with “, ”.
+If NEWLINE is non-nil, add a newline before the main text."
   (unless (seq-empty-p items)
-    (insert prefix (cond
-                    ((or (vectorp items) (listp items))
-                     (biblio-string-join items ", "))
-                    (t items)))))
+    (when newline
+      (insert "\n"))
+    (biblio--insert-with-prefix
+     prefix (cond
+             ((or (vectorp items) (listp items))
+              (biblio-string-join items ", "))
+             (t items)))))
 
 (defun biblio-insert-result (item &optional no-sep)
   "Print a (prepared) bibliographic search result ITEM.
@@ -302,14 +314,15 @@ space after the record."
   (biblio--with-text-property 'biblio-metadata item
     (let-alist item
       (biblio-with-fontification 'font-lock-function-name-face
-        (insert "> " .title))
+        (biblio--insert-with-prefix "> " .title))
+      (insert "\n")
       (biblio-with-fontification 'font-lock-doc-face
-        (insert "\n  " .authors))
+        (biblio--insert-with-prefix "  " .authors))
       (biblio-with-fontification 'font-lock-comment-face
-        (biblio--insert-detail "\n  In:         " .container)
-        (biblio--insert-detail "\n  Publisher:  " .publisher)
-        (biblio--insert-detail "\n  References: " .references)
-        (biblio--insert-detail "\n  URL:        " .url))
+        (biblio--insert-detail "  In:         " .container t)
+        (biblio--insert-detail "  Publisher:  " .publisher t)
+        (biblio--insert-detail "  References: " .references t)
+        (biblio--insert-detail "  URL:        " .url t))
       (unless no-sep
         (insert "\n\n")))))
 
