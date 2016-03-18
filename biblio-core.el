@@ -159,15 +159,15 @@ returns another error, an exception is raised."
   (interactive)
   (biblio--selection-forward-bibtex #'biblio--selection-copy-callback t))
 
-(defun biblio--selection-source-window ()
+(defun biblio--source-window ()
   "Get the window of the source buffer."
   (get-buffer-window biblio--source-buffer))
 
 (defun biblio--selection-insert-callback (bibtex entry)
   "Add BIBTEX (from ENTRY) to kill ring."
-  (let ((source-window (biblio--selection-source-window)))
-    (with-current-buffer biblio--source-buffer
-      (with-selected-window (or source-window (selected-window))
+  (let ((source-buffer biblio--source-buffer))
+    (with-selected-window (or (biblio--source-window) (selected-window))
+      (with-current-buffer source-buffer
         (insert bibtex "\n\n"))))
   (message "Inserted bibtex entry for %S." (biblio-alist-get 'title entry)))
 
