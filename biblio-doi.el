@@ -129,8 +129,7 @@ FORWARD-TO is the callback to call with the results of the search."
   "Pass BibTeX entry for DOI to FORWARD-TO."
   (biblio-doi--forward-bibtex-dx
    doi (lambda (result)
-         (if result
-             (funcall forward-to result)
+         (if result (funcall forward-to result)
            (biblio-doi--forward-bibtex-crosscite doi forward-to)))))
 
 ;;;###autoload
