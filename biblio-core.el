@@ -67,7 +67,8 @@ Join all STRINGS using SEPARATOR."
 (defun biblio--beginning-of-response-body ()
   "Move point to beginning of response body."
   (goto-char (point-min))
-  (re-search-forward "^\n"))
+  (unless (re-search-forward "^\n" nil t)
+    (error "Could not find body in response %S" (buffer-string))))
 
 (defun biblio-response-as-utf-8 ()
   "Extract body of response."
