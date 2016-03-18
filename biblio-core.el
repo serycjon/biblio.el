@@ -69,9 +69,9 @@ Join all STRINGS using SEPARATOR."
   (goto-char (point-min))
   (re-search-forward "^\n"))
 
-(defun biblio-extract-response ()
+(defun biblio-response-as-utf-8 ()
   "Extract body of response."
-  (biblio--beginning-of-response-body)
+  (set-buffer-multibyte t)
   (decode-coding-region (point) (point-max) 'utf-8 t))
 
 (defun biblio--event-error-code (event)

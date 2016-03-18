@@ -92,7 +92,7 @@ requests a generic format and crates the BibTeX on its own."
 BUFFER-OR-ERRORS, FORWARD-TO: see there."
   (funcall forward-to
            (when (bufferp buffer-or-errors)
-             (biblio-doi--format-bibtex (biblio-extract-response)))))
+             (biblio-doi--format-bibtex (biblio-response-as-utf-8)))))
 
 (defun biblio-doi--generic-url-callback (cleanup-fn forward-to)
   "Make an URL-ready callback.
