@@ -47,10 +47,9 @@
 ;; Most of these commands work together: for example, `crossref-lookup' displays
 ;; a list of results in `biblio-selection-mode'.  In that mode, use:
 ;;
-;; `c' or `M-w' to copy a BibTeX record for the current entry
-;; `i' or `C-y' to insert the curent entry in the buffer that the current search
-;; was started from.
-;; `o' to run an extended action, such as fetching a Dissemin record.
+;; * `c' or `M-w' to copy a BibTeX record for the current entry
+;; * `i' or `C-y' to insert a BibTex record for the current entry in source buffer.
+;; * `o' to run an extended action, such as fetching a Dissemin record.
 
 ;;; Code:
 
