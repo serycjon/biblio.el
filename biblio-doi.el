@@ -113,7 +113,7 @@ FORWARD-TO is the callback to call with the results of the search."
 
 (defun biblio-doi--forward-bibtex-crosscite (doi forward-to)
   "Forward BibTeX entry for DOI from CrossCite to FORWARD-TO."
-  (url-retrieve (biblio-doi--crosscite-url doi) (biblio-doi--crosscite-callback forward-to)))
+  (biblio-url-retrieve (biblio-doi--crosscite-url doi) (biblio-doi--crosscite-callback forward-to)))
 
 (defun biblio-doi--dx-callback (forward-to)
   "Generate a handler for response of DX server.
@@ -123,7 +123,7 @@ FORWARD-TO is the callback to call with the results of the search."
 (defun biblio-doi--forward-bibtex-dx (doi forward-to)
   "Forward BibTeX entry for DOI from dx.doi.org to FORWARD-TO."
   (biblio-doi--set-mime-accept)
-  (url-retrieve (biblio-doi--dx-url doi) (biblio-doi--dx-callback forward-to)))
+  (biblio-url-retrieve (biblio-doi--dx-url doi) (biblio-doi--dx-callback forward-to)))
 
 (defun biblio-doi-forward-bibtex (doi forward-to)
   "Pass BibTeX entry for DOI to FORWARD-TO."

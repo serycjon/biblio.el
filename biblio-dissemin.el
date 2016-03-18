@@ -110,8 +110,8 @@ Interactively, or if CLEANUP is non-nil, pass DOI through
   (interactive "MDOI: \nd")
   (when cleanup
     (setq doi (biblio-cleanup-doi doi)))
-  (url-retrieve (biblio-dissemin--url doi)
-                (biblio-generic-url-callback #'biblio-dissemin--callback)))
+  (biblio-url-retrieve (biblio-dissemin--url doi)
+                      (biblio-generic-url-callback #'biblio-dissemin--callback)))
 
 (defun biblio-dissemin--lookup-record (record)
   "Retrieve a RECORD from Dissemin, and display it.

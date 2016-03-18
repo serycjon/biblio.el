@@ -36,10 +36,10 @@
 (defun biblio-dblp--forward-bibtex (identifier forward-to)
   "Get BibTeX for DBLP entry IDENTIFIER, and pass it to FORWARD-TO."
   (let ((url (replace-regexp-in-string "/rec/" "/rec/bib2/" identifier t t)))
-    (url-retrieve url (biblio-generic-url-callback
-                       (lambda (_buffer-or-errors)
-                         "Parse DBLP BibTeX results."
-                         (funcall forward-to (biblio-response-as-utf-8)))))))
+    (biblio-url-retrieve url (biblio-generic-url-callback
+                             (lambda (_buffer-or-errors)
+                               "Parse DBLP BibTeX results."
+                               (funcall forward-to (biblio-response-as-utf-8)))))))
 
 (defun biblio-dblp--extract-interesting-fields (item)
   "Prepare a DBLP search result ITEM for display."

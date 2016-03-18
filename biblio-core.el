@@ -26,7 +26,7 @@
 ;; package; for user interfaces, see any of `biblio-crossref', `biblio-dblp',
 ;; `biblio-doi', and `biblio-dissemin', and the more general `biblio' package.
 
-(require 'url)
+(require 'url-queue)
 (require 'json)
 (require 'dash)
 (require 'let-alist)
@@ -109,6 +109,13 @@ returns another error, an exception is raised."
               (delete-region (point-min) (point))
               (funcall callback (current-buffer))))
         (kill-buffer source-buffer)))))
+
+(defun biblio-url-retrieve (url callback)
+  "Wrapper around `url-queue-retrieve'.
+URL and CALLBACK; see `url-queue-retrieve'"
+  (setq url-queue-timeout 1)
+  (message "Fetching %s" url)
+  (url-queue-retrieve url callback))
 
 (defun biblio-strip (str)
   "Remove spaces surrounding STR."
@@ -345,8 +352,8 @@ a list of results."
   "Lookup QUERY.
 Format query with (URL-FUNCTION query), and parse results using
 PARSE-BUFFER-FUNCTION (as described in `biblio--callback')"
-  (url-retrieve (funcall url-function query)
-                (biblio--callback (current-buffer) parse-buffer-function)))
+  (biblio-url-retrieve (funcall url-function query)
+                       (biblio--callback (current-buffer) parse-buffer-function)))
 
 (provide 'biblio-core)
 ;;; biblio-core.el ends here
