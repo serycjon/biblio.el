@@ -98,13 +98,13 @@ BUFFER-OR-ERRORS, FORWARD-TO: see there."
   "Make an URL-ready callback.
 Call CLEANUP-FN in any case, and FORWARD-TO with BibTeX source
 or nil depending on whether an error occured.  If error 406
-occures, forward nil; otherwise, signal that error.  This is
+occurs, forward nil; otherwise, signal the error.  This is
 essentially a thin wrapper around `biblio-generic-url-callback'."
   (biblio-generic-url-callback
    (lambda (buffer-or-errors)
-     "Handle response from CrossCite server."
+     "Handle response from BibTeX server."
      (biblio-doi--generic-url-callback-1 buffer-or-errors forward-to))
-   cleanup-fn '(406)))
+   cleanup-fn '(http . 406)))
 
 (defun biblio-doi--crosscite-callback (forward-to)
   "Generate a handler for response of CrossCite server.

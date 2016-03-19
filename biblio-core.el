@@ -78,15 +78,16 @@ Join all STRINGS using SEPARATOR."
 (defun biblio--event-error-code (event)
   "Extract HTTP error code from EVENT, if any."
   (pcase event
-    (`(:error . (error http ,number))
-     number)))
+    (`(:error . (error ,source ,details))
+     (cons source details))))
 
 (defun biblio-check-for-retrieval-error (events &rest allowed-errors)
   "Return list of errors in EVENTS.
 If any of these errors is no in ALLOWED-ERRORS, signal an error."
+  (message "Got events %S" (biblio--plist-to-alist events))
   (let ((errors (delq nil (mapcar #'biblio--event-error-code (biblio--plist-to-alist events)))))
     (dolist (err errors)
-      (unless (member err allowed-errors)
+      (unless (or (eq (car err) 'url-queue-timeout) (member err allowed-errors))
         (error "Error %S while retrieving URL" err)))
     errors))
 
