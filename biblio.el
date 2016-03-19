@@ -50,6 +50,8 @@
 ;; * `c' or `M-w' to copy a BibTeX record for the current entry
 ;; * `i' or `C-y' to insert a BibTex record for the current entry in source buffer.
 ;; * `o' to run an extended action, such as fetching a Dissemin record.
+;;
+;; See http://github.com/cpitclaudel/biblio.el for more information
 
 ;;; Code:
 
