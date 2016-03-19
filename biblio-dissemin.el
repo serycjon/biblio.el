@@ -67,10 +67,9 @@
   "Translate Dissemin's CLASSIFICATION for display."
   (pcase classification
     (`"OA" "Available from the publisher")
-    (`"OK" "Available from the author")
-    (`"COULDBE" "Unavailable (but could be shared by the author)")
-    (`"UNK" "Unavailable (and sharing policy is unclear)")
-    (`"CLOSED" "Unavailable (and subject to a restrictive sharing policy)")
+    (`"OK" "Some versions may be shared by the author")
+    (`"UNK" "Sharing policy is unclear")
+    (`"CLOSED" "Subject to a restrictive sharing policy")
     (_ classification)))
 
 (defun biblio-dissemin--pretty-print (paper)
