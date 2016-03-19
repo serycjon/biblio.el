@@ -24,9 +24,10 @@
 
 ;;; Commentary:
 ;;
-;; Retrieve and insert BibTeX records by DOI using `doi-insert'.  Information is
-;; retrieved from parent sites from each DOI using the “application/x-bibtex”
-;; and “text/bibliography” protocols.
+;; Retrieve and insert BibTeX records by DOI using `doi-insert-bibtex'.
+;; Information is retrieved from DOI issuing sites of each DOI using the
+;; “application/x-bibtex” and “text/bibliography” request types, falling back to
+;; CrossCite if unavailable.
 ;;
 ;; This package integrates with `biblio-selection-mode', and is part of the more
 ;; general `biblio' package (which see for more documentation).
