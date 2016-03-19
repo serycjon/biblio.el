@@ -78,7 +78,9 @@ requests a generic format and crates the BibTeX on its own."
         (when (search-forward "@data{" nil t)
           (replace-match "@misc{"))
         (goto-char (point-min))
-        (bibtex-clean-entry)
+        (let ((bibtex-entry-format t)
+              (bibtex-align-at-equal-sign t))
+          (bibtex-clean-entry))
         (buffer-string))
     (error bibtex)))
 
