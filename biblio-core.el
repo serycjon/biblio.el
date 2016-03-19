@@ -36,7 +36,20 @@
 
 (defvar-local biblio--source-buffer nil
   "Buffer from which a bibliographic search was started.
-This variable is local to eacg search results buffer.")
+This variable is local to each search results buffer.")
+
+(defgroup biblio nil
+  "A browser for bibliographic information."
+  :group 'communication)
+
+(defgroup biblio-core nil
+  "Core of the biblio package."
+  :group 'biblio)
+
+(defcustom biblio-synchronous nil
+  "Whether bibliographic queries should be synchronous."
+  :group 'biblio-core
+  :type 'boolean)
 
 ;;; Compatibility
 
@@ -115,9 +128,12 @@ returns another error, an exception is raised."
 (defun biblio-url-retrieve (url callback)
   "Wrapper around `url-queue-retrieve'.
 URL and CALLBACK; see `url-queue-retrieve'"
-  (setq url-queue-timeout 1)
   (message "Fetching %s" url)
-  (url-queue-retrieve url callback))
+  (if biblio-synchronous
+      (with-current-buffer (url-retrieve-synchronously url)
+        (funcall callback nil))
+    (setq url-queue-timeout 1)
+    (url-queue-retrieve url callback)))
 
 (defun biblio-strip (str)
   "Remove spaces surrounding STR."
