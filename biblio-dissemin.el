@@ -43,6 +43,14 @@
   "Action for a URL BUTTON created by Dissemin."
   (browse-url (button-label button)))
 
+(defun biblio-dissemin--insert-button (url prefix)
+  "Insert a button pointing to URL, prefixed by PREFIX."
+  (unless (seq-empty-p url)
+    (insert "\n" prefix)
+    (insert-text-button url
+                        'follow-link t
+                        'action #'biblio-dissemin--browse-url)))
+
 (defun biblio-dissemin--insert-record (record)
   "Insert a Dissemin RECORD entry into the current buffer."
   (let-alist record
@@ -55,19 +63,28 @@
     (biblio-with-fontification 'font-lock-doc-face
       (biblio-insert-with-prefix "   " .abstract))))
 
+(defun dissemin--translate-classification (classification)
+  "Translate Dissemin's CLASSIFICATION for display."
+  (pcase classification
+    (`"OA" "Available from the publisher")
+    (`"OK" "Available from the author")
+    (`"COULDBE" "Unavailable (but could be shared by the author)")
+    (`"UNK" "Unavailable (and sharing policy is unclear)")
+    (`"CLOSED" "Unavailable (and subject to a restrictive sharing policy)")
+    (_ classification)))
+
 (defun biblio-dissemin--pretty-print (paper)
   "Pretty-print a Dissemin PAPER entry to current buffer."
   (let-alist paper
     (biblio-insert-result
      (list (cons 'title .title)
-           (cons 'authors (apply #'biblio-join ", " "(no authors)"
-                                 (seq-map #'biblio-dissemin--format-author .authors))))
+           (cons 'authors
+                 (apply #'biblio-join ", " "(no authors)"
+                        (seq-map #'biblio-dissemin--format-author .authors)))
+           (cons 'open-access-status
+                 (dissemin--translate-classification .classification)))
      t)
-    (unless (seq-empty-p .pdf_url)
-      (insert "\n🔗 ")
-      (insert-text-button .pdf_url
-                          'follow-link t
-                          'action #'biblio-dissemin--browse-url))
+    (biblio-dissemin--insert-button .pdf_url "")
     (if (seq-empty-p .records)
         (insert "\n\n(no records)")
       (seq-do #'biblio-dissemin--insert-record .records))))

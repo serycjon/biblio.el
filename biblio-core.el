@@ -320,10 +320,11 @@ space after the record."
       (biblio-with-fontification 'font-lock-doc-face
         (biblio-insert-with-prefix "  " .authors))
       (biblio-with-fontification 'font-lock-comment-face
-        (biblio--insert-detail "  In:         " .container t)
-        (biblio--insert-detail "  Publisher:  " .publisher t)
+        (biblio--insert-detail "  In: " .container t)
+        (biblio--insert-detail "  Publisher: " .publisher t)
         (biblio--insert-detail "  References: " .references t)
-        (biblio--insert-detail "  URL:        " .url t))
+        (biblio--insert-detail "  URL: " .url t)
+        (biblio--insert-detail "  Open Access: " .open-access-status t))
       (unless no-sep
         (insert "\n\n")))))
 
