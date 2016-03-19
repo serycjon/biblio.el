@@ -46,12 +46,14 @@
 (defun biblio-dissemin--insert-record (record)
   "Insert a Dissemin RECORD entry into the current buffer."
   (let-alist record
-    (insert "\n\n>> ")
+    (insert "\n\n")
     (biblio-with-fontification 'font-lock-preprocessor-face
-      (insert .identifier))
-    (insert "\n   ")
+      (biblio-insert-with-prefix ">> " .identifier))
+    (biblio-dissemin--insert-button .pdf_url "   ")
+    (biblio-dissemin--insert-button .splash_url "   ")
+    (insert "\n")
     (biblio-with-fontification 'font-lock-doc-face
-      (insert .abstract))))
+      (biblio-insert-with-prefix "   " .abstract))))
 
 (defun biblio-dissemin--pretty-print (paper)
   "Pretty-print a Dissemin PAPER entry to current buffer."
@@ -111,7 +113,7 @@ Interactively, or if CLEANUP is non-nil, pass DOI through
   (when cleanup
     (setq doi (biblio-cleanup-doi doi)))
   (biblio-url-retrieve (biblio-dissemin--url doi)
-                      (biblio-generic-url-callback #'biblio-dissemin--callback)))
+                       (biblio-generic-url-callback #'biblio-dissemin--callback)))
 
 (defun biblio-dissemin--lookup-record (record)
   "Retrieve a RECORD from Dissemin, and display it.

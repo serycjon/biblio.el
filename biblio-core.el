@@ -287,7 +287,7 @@ Interactively, query for ACTION from
         fallback
       (biblio-string-join strs sep))))
 
-(defun biblio--insert-with-prefix (prefix &rest strs)
+(defun biblio-insert-with-prefix (prefix &rest strs)
   "Like INSERT with PREFIX and STRS, but set `wrap-prefix'.
 That is, the inserted text gets a `wrap-prefix' made of enough
 white space to align with the end of PREFIX."
@@ -301,7 +301,7 @@ If NEWLINE is non-nil, add a newline before the main text."
   (unless (seq-empty-p items)
     (when newline
       (insert "\n"))
-    (biblio--insert-with-prefix
+    (biblio-insert-with-prefix
      prefix (cond
              ((or (vectorp items) (listp items))
               (biblio-string-join items ", "))
@@ -315,10 +315,10 @@ space after the record."
   (biblio--with-text-property 'biblio-metadata item
     (let-alist item
       (biblio-with-fontification 'font-lock-function-name-face
-        (biblio--insert-with-prefix "> " .title))
+        (biblio-insert-with-prefix "> " .title))
       (insert "\n")
       (biblio-with-fontification 'font-lock-doc-face
-        (biblio--insert-with-prefix "  " .authors))
+        (biblio-insert-with-prefix "  " .authors))
       (biblio-with-fontification 'font-lock-comment-face
         (biblio--insert-detail "  In:         " .container t)
         (biblio--insert-detail "  Publisher:  " .publisher t)
