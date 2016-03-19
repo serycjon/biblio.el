@@ -27,6 +27,7 @@
 ;; `biblio-doi', and `biblio-dissemin', and the more general `biblio' package.
 
 (require 'url-queue)
+(require 'ido)
 (require 'json)
 (require 'dash)
 (require 'let-alist)
@@ -54,7 +55,7 @@ This variable is local to each search results buffer.")
 ;;; Compatibility
 
 (defun biblio-alist-get (key alist &optional default)
-  "Copy of Emacs 25's `biblio-alist-get'.
+  "Copy of Emacs 25's `alist-get'.
 Get the value associated to KEY in ALIST.  DEFAULT is the value
 to return if KEY is not found in ALIST."
   (let ((x (assq key alist)))
@@ -228,11 +229,24 @@ If QUIT is set, also kill the results buffer."
 Each element should be in the for (LABEL . FUNCTION); FUNCTION
 will be called with the metadata of the current item.")
 
+(defun biblio-completing-read (prompt collection &optional predicate require-match
+                                      initial-input hist def inherit-input-method)
+  "Complete using ido, unless user picked another completion package.
+PROMPT, COLLECTION, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
+HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
+  (let ((completing-read-function
+         (if (eq completing-read-function #'completing-read-default)
+             #'ido-completing-read completing-read-function)))
+    (completing-read prompt collection predicate require-match
+                     initial-input hist def inherit-input-method)))
+
 (defun biblio--read-selection-extensible-action ()
   "Read an action from `biblio-selection-mode-actions-alist'."
-  (list (biblio-alist-get
-         (completing-read "Action: " biblio-selection-mode-actions-alist nil t)
-         biblio-selection-mode-actions-alist)))
+  (let ((choices (mapcar #'car biblio-selection-mode-actions-alist)))
+    (-> (biblio-completing-read "Action: " choices nil t)
+        (assoc biblio-selection-mode-actions-alist)
+        (cdr)
+        (list))))
 
 (defun biblio--selection-extensible-action (action)
   "Run ACTION with metadata of current entry.
