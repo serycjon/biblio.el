@@ -69,7 +69,7 @@
   "Extract search results from CrossRef response."
   (let-alist (json-read)
     (unless (string= .status "ok")
-      (error "Query failed with status %S" .status))
+      (warn "Query failed with status %S" .status))
     (seq-map #'biblio-crossref--extract-interesting-fields .message.items)))
 
 (defun biblio-crossref--url (query)

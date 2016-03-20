@@ -136,12 +136,17 @@ WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
 
 (defun biblio-check-for-retrieval-error (events &rest allowed-errors)
   "Return list of errors in EVENTS.
-If any of these errors is no in ALLOWED-ERRORS, signal an error."
+If any of these errors is no in ALLOWED-ERRORS, return a
+cons '(error . details) instead."
   (let ((errors (delq nil (mapcar #'biblio--event-error-code (biblio--plist-to-alist events)))))
-    (dolist (err errors)
-      (unless (or (eq (car err) 'url-queue-timeout) (member err allowed-errors))
-        (error "Error %S while retrieving URL" err)))
-    errors))
+    (catch 'return
+      (dolist (err errors)
+        (cond
+         ((eq (car err) 'url-queue-timeout)
+          (throw 'return '(error . timeout)))
+         ((not (member err allowed-errors))
+          (throw 'return `(error . ,err)))))
+      errors)))
 
 (defun biblio-generic-url-callback (callback &optional cleanup-function allowed-errors)
   "Make an `url'-ready callback from CALLBACK.
@@ -158,7 +163,9 @@ returns another error, an exception is raised."
           (progn
             (funcall (or cleanup-function #'ignore))
             (-if-let* ((errors (biblio-check-for-retrieval-error events allowed-errors)))
-                (funcall callback errors)
+                (if (eq 'error (car errors))
+                    (message "Error while processing request: %S" (cdr errors))
+                  (funcall callback errors))
               (biblio--beginning-of-response-body)
               (delete-region (point-min) (point))
               (funcall callback (current-buffer))))

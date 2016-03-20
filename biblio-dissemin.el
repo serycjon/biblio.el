@@ -109,7 +109,7 @@
   (decode-coding-region (point-min) (point-max) 'utf-8)
   (let-alist (json-read)
     (unless (string= .status "ok")
-      (error "Dissemin query failed"))
+      (warn "Dissemin query failed"))
     .paper))
 
 (defun biblio-dissemin--url (doi)
