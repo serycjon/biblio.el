@@ -61,7 +61,7 @@
           (cons 'container .container-title)
           (cons 'references (seq-concatenate 'list (list .DOI) .isbn))
           (cons 'type .type)
-          (cons 'url .url))))
+          (cons 'url .URL))))
 
 (defun biblio-crossref--parse-search-results ()
   "Extract search results from CrossRef response."

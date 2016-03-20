@@ -26,9 +26,11 @@
 ;; package; for user interfaces, see any of `biblio-crossref', `biblio-dblp',
 ;; `biblio-doi', and `biblio-dissemin', and the more general `biblio' package.
 
-(require 'url-queue)
+(require 'browse-url)
 (require 'ido)
 (require 'json)
+(require 'url-queue)
+
 (require 'dash)
 (require 'let-alist)
 (require 'seq)
@@ -159,6 +161,21 @@ URL and CALLBACK; see `url-queue-retrieve'"
       (setq target (match-end 0)))
     (goto-char target)))
 
+(defun biblio-get-url (metadata)
+  "Compute a url from METADATA.
+Uses .url, and .doi as a fallback."
+  (let-alist metadata
+    (if .url .url
+      (when .doi
+        (concat "https://dx.doi.org/" (url-encode-url .doi))))))
+
+(defun biblio--selection-browse ()
+  "Open the current entry in a web browser."
+  (interactive)
+  (-if-let* ((url (biblio-get-url (biblio--selection-metadata-at-point))))
+      (browse-url url)
+    (error "No URL for this entry")))
+
 (defun biblio--selection-next ()
   "Move to next seach result."
   (interactive)
@@ -272,6 +289,7 @@ Interactively, query for ACTION from
     (define-key map (kbd "<up>") #'biblio--selection-previous)
     (define-key map (kbd "C-p") #'biblio--selection-previous)
     (define-key map (kbd "c") #'biblio--selection-copy)
+    (define-key map (kbd "RET") #'biblio--selection-browse)
     (define-key map (kbd "M-w") #'biblio--selection-copy)
     (define-key map (kbd "C") #'biblio--selection-copy-quit)
     (define-key map (kbd "C-w") #'biblio--selection-copy-quit)
@@ -366,13 +384,15 @@ space after the record."
       (unless no-sep
         (insert "\n\n")))))
 
-(defun biblio--make-buffer (source-buffer)
-  "Create or retrieve the search results buffer for SOURCE-BUFFER."
-  (get-buffer-create (format "*References search started from %s*" (buffer-name source-buffer))))
+(defun biblio--make-buffer (source-buffer backend-name)
+  "Find or create the results buffer for SOURCE-BUFFER and BACKEND-NAME."
+  (get-buffer-create (format "*%s search started from %s*"
+                             backend-name
+                             (buffer-name source-buffer))))
 
-(defun biblio-insert-results (source-buffer items)
-  "Create a results buffer for SOURCE-BUFFER and print ITEMS in it."
-  (with-current-buffer (biblio--make-buffer source-buffer)
+(defun biblio-insert-results (source-buffer backend-name items)
+  "Create a results buffer for SOURCE-BUFFER and BACKEND-NAME and print ITEMS in it."
+  (with-current-buffer (biblio--make-buffer source-buffer backend-name)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (seq-do #'biblio-insert-result items)
@@ -389,7 +409,7 @@ Results are parsed with (BACKEND 'parse-buffer)."
    (lambda (_buffer-or-errors)
      "Parse results of bibliographic search."
      (->> (funcall backend 'parse-buffer)
-          (biblio-insert-results source-buffer)
+          (biblio-insert-results source-buffer (funcall backend 'name))
           (pop-to-buffer)))))
 
 ;;; Searching
