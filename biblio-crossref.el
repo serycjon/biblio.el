@@ -34,6 +34,10 @@
 (require 'biblio-core)
 (require 'biblio-doi)
 
+(defun biblio-crossref--forward-bibtex (metadata forward-to)
+  "Forward BibTeX for CrossRef entry METADATA to FORWARD-TO."
+  (biblio-doi-forward-bibtex (biblio-alist-get 'doi metadata) forward-to))
+
 (defun biblio-crossref--format-affiliation (affiliation)
   "Format AFFILIATION for CrossRef search results."
   (biblio-string-join (seq-map (apply-partially #'biblio-alist-get 'name) affiliation) ", "))
@@ -49,8 +53,6 @@
   "Prepare a CrossRef search result ITEM for display."
   (let-alist item
     (list (cons 'doi .DOI)
-          (cons 'identifier .DOI)
-          (cons 'forward-bibtex-function #'biblio-doi-forward-bibtex)
           (cons 'title (biblio-join
                         " " "(no title)"
                         (biblio-string-join .title ", ")
@@ -82,6 +84,7 @@ COMMAND, ARG, MORE: See `biblio-backends'."
     (`prompt "CrossRef query: ")
     (`url (biblio-crossref--url arg))
     (`parse-buffer (biblio-crossref--parse-search-results))
+    (`forward-bibtex (biblio-crossref--forward-bibtex arg (car more)))
     (`register (add-to-list 'biblio-backends #'biblio-crossref-backend))))
 
 ;;;###autoload

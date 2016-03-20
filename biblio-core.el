@@ -232,8 +232,9 @@ Uses .url, and .doi as a fallback."
 If QUIT is set, also kill the results buffer."
   (-if-let* ((metadata (biblio--selection-metadata-at-point))
              (results-buffer (current-buffer)))
-      (let-alist metadata
-        (funcall .forward-bibtex-function .identifier
+      (progn
+        (funcall (biblio-alist-get 'backend metadata)
+                 'forward-bibtex metadata
                  (lambda (bibtex)
                    (with-current-buffer results-buffer
                      (funcall forward-to bibtex metadata))))
@@ -351,17 +352,14 @@ white space to align with the end of PREFIX."
     (apply #'insert prefix strs)))
 
 (defun biblio--insert-detail (prefix items newline)
-  "Insert PREFIX followed by ITEMS, if ITEMS is non-empty.
-If ITEMS is a list or vector, join its entries with “, ”.
-If NEWLINE is non-nil, add a newline before the main text."
+  "Insert PREFIX followed by ITEMS, if ITEMS has non-empty entries.
+If ITEMS is a list or vector, join its entries with “, ”.  If
+NEWLINE is non-nil, add a newline before the main text."
+  (when (or (vectorp items) (listp items))
+    (setq items (apply #'biblio-join ", " items)))
   (unless (seq-empty-p items)
-    (when newline
-      (insert "\n"))
-    (biblio-insert-with-prefix
-     prefix (cond
-             ((or (vectorp items) (listp items))
-              (biblio-string-join items ", "))
-             (t items)))))
+    (when newline (insert "\n"))
+    (biblio-insert-with-prefix prefix items)))
 
 (defun biblio-insert-result (item &optional no-sep)
   "Print a (prepared) bibliographic search result ITEM.
@@ -402,6 +400,10 @@ space after the record."
     (setq buffer-read-only t)
     (current-buffer)))
 
+(defun biblio--tag-backend (backend items)
+  "Add (backend . BACKEND) to each alist in ITEMS."
+  (seq-map (lambda (i) (cons `(backend . ,backend) i)) items))
+
 (defun biblio--callback (source-buffer backend)
   "Generate a search results callback for SOURCE-BUFFER.
 Results are parsed with (BACKEND 'parse-buffer)."
@@ -409,6 +411,7 @@ Results are parsed with (BACKEND 'parse-buffer)."
    (lambda (_buffer-or-errors)
      "Parse results of bibliographic search."
      (->> (funcall backend 'parse-buffer)
+          (biblio--tag-backend backend)
           (biblio-insert-results source-buffer (funcall backend 'name))
           (pop-to-buffer)))))
 
@@ -438,6 +441,10 @@ term to feed this backend.
 `parse-buffer': (on argument, BUFFER) Parse the contents of
 BUFFER (current at the time of the call) and return a list of
 results.
+
+`forward-bibtex': (two arguments, METADATA and FORWARD-TO)
+Produce a BibTeX record from METADATA (one of the elements of the
+list produced by `parse-buffer') and call FORWARD-TO on it.
 
 For examples of backends, see one of `biblio-crossref-backend'
 and `biblio-dblp-backend'.

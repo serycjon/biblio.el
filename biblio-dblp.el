@@ -33,9 +33,10 @@
 
 (require 'biblio-core)
 
-(defun biblio-dblp--forward-bibtex (identifier forward-to)
-  "Get BibTeX for DBLP entry IDENTIFIER, and pass it to FORWARD-TO."
-  (let ((url (replace-regexp-in-string "/rec/" "/rec/bib2/" identifier t t)))
+(defun biblio-dblp--forward-bibtex (metadata forward-to)
+  "Forward BibTeX for DBLP entry METADATA to FORWARD-TO."
+  (let* ((source-url (alist-get 'url metadata))
+         (url (replace-regexp-in-string "/rec/" "/rec/bib2/" source-url t t)))
     (biblio-url-retrieve url (biblio-generic-url-callback
                               (lambda (_buffer-or-errors)
                                 "Parse DBLP BibTeX results."
@@ -44,9 +45,7 @@
 (defun biblio-dblp--extract-interesting-fields (item)
   "Prepare a DBLP search result ITEM for display."
   (let-alist (biblio-alist-get 'info item)
-    (list (cons 'identifier (cadr .url))
-          (cons 'forward-bibtex-function #'biblio-dblp--forward-bibtex)
-          (cons 'title (cadr .title))
+    (list (cons 'title (cadr .title))
           (cons 'authors (apply #'biblio-join ", " "(no authors)"
                                 (seq-map #'cl-caddr (cdr .authors))))
           (cons 'container (cadr .venue))
@@ -71,7 +70,7 @@
   "Create a DBLP url to look up QUERY."
   (format "http://dblp.uni-trier.de/search/publ/api?q=%s&format=xml" (url-encode-url query)))
 
-(defun biblio-dblp-backend (command &optional arg &rest _more)
+(defun biblio-dblp-backend (command &optional arg &rest more)
   "A DBLP backend for biblio.el.
 COMMAND, ARG, MORE: See `biblio-backends'."
   (interactive (list 'interactive))
@@ -80,6 +79,7 @@ COMMAND, ARG, MORE: See `biblio-backends'."
     (`prompt "DBLP query: ")
     (`url (biblio-dblp--url arg))
     (`parse-buffer (biblio-dblp--parse-search-results))
+    (`forward-bibtex (biblio-dblp--forward-bibtex arg (car more)))
     (`register (add-to-list 'biblio-backends #'biblio-dblp-backend))))
 
 ;;;###autoload

@@ -60,7 +60,7 @@ docstring of `biblio-backends`.  Here is the definition of `biblio-dblp-backend`
 for example:
 
 ```elisp
-(defun biblio-dblp-backend (command &optional arg &rest _more)
+(defun biblio-dblp-backend (command &optional arg &rest more)
   "A DBLP backend for biblio.el.
 COMMAND, ARG, MORE: See `biblio-backends'."
   (interactive (list 'interactive))
@@ -69,6 +69,7 @@ COMMAND, ARG, MORE: See `biblio-backends'."
     (`prompt "DBLP query: ")
     (`url (biblio-dblp--url arg))
     (`parse-buffer (biblio-dblp--parse-search-results))
+    (`forward-bibtex (biblio-dblp--forward-bibtex arg (car more)))
     (`register (add-to-list 'biblio-backends #'biblio-dblp-backend))))
 
 ;;;###autoload
