@@ -139,13 +139,13 @@ RECORD is a formatted record as expected by `biblio-lookup'."
       (error "No DOI found in this entry"))))
 
 ;;;###autoload
-(defun biblio-dissemin--register ()
+(defun biblio-dissemin--register-action ()
   "Add Dissemin to list of `biblio-selection-mode' actions."
   (add-to-list 'biblio-selection-mode-actions-alist
                '("Dissemin" . biblio-dissemin--lookup-record)))
 
 ;;;###autoload
-(add-hook 'biblio-selection-mode-hook #'biblio-dissemin--register)
+(add-hook 'biblio-selection-mode-hook #'biblio-dissemin--register-action)
 
 (provide 'biblio-dissemin)
 ;;; biblio-dissemin.el ends here

@@ -58,7 +58,7 @@
   "Check if ITEM is a DBLP hit."
   (eq (car-safe item) 'hit))
 
-(defun biblio-dblp--parse-buffer ()
+(defun biblio-dblp--parse-search-results ()
   "Extract search results from DBLP response."
   (set-buffer-multibyte t) ;; URL buffer is unibyte
   (decode-coding-region (point-min) (point-max) 'utf-8)
@@ -67,17 +67,29 @@
       (error "Query failed with status %S" .status))
     (seq-map #'biblio-dblp--extract-interesting-fields (seq-filter #'biblio-dblp--hitp .hits))))
 
-;;; Searching
-
 (defun biblio-dblp--url (query)
   "Create a DBLP url to look up QUERY."
   (format "http://dblp.uni-trier.de/search/publ/api?q=%s&format=xml" (url-encode-url query)))
 
+(defun biblio-dblp-backend (command &optional arg &rest _more)
+  "A DBLP backend for biblio.el.
+COMMAND, ARG, MORE: See `biblio-backends'."
+  (interactive (list 'interactive))
+  (pcase command
+    (`name "DBLP")
+    (`prompt "DBLP query: ")
+    (`url (biblio-dblp--url arg))
+    (`parse-buffer (biblio-dblp--parse-search-results))
+    (`register (add-to-list 'biblio-backends #'biblio-dblp-backend))))
+
 ;;;###autoload
-(defun dblp-lookup (query)
-  "Look up QUERY on DBLP."
-  (interactive (list (biblio-read-query "DBLP")))
-  (biblio-lookup query #'biblio-dblp--url #'biblio-dblp--parse-buffer))
+(add-hook 'biblio-init-hook #'biblio-dblp-backend)
+
+;;;###autoload
+(defun dblp-lookup ()
+  "Start a DBLP search."
+  (interactive)
+  (biblio-lookup #'biblio-dblp-backend))
 
 (provide 'biblio-dblp)
 ;;; biblio-dblp.el ends here

@@ -63,28 +63,35 @@
           (cons 'type .type)
           (cons 'url .url))))
 
-(defun biblio-crossref--parse-search-results (js)
-  "Extract search results from CrossRef response JS."
-  (let-alist js
+(defun biblio-crossref--parse-search-results ()
+  "Extract search results from CrossRef response."
+  (let-alist (json-read)
     (unless (string= .status "ok")
       (error "Query failed with status %S" .status))
     (seq-map #'biblio-crossref--extract-interesting-fields .message.items)))
-
-;;; Searching
-
-(defun biblio-crossref--parse-region ()
-  "Parse CrossRef response in buffer."
-  (biblio-crossref--parse-search-results (json-read)))
 
 (defun biblio-crossref--url (query)
   "Create a CrossRef url to look up QUERY."
   (format "http://api.crossref.org/works?query=%s" (url-encode-url query)))
 
+(defun biblio-crossref-backend (command &optional arg &rest _more)
+  "A CrossRef backend for biblio.el.
+COMMAND, ARG, MORE: See `biblio-backends'."
+  (pcase command
+    (`name "CrossRef")
+    (`prompt "CrossRef query: ")
+    (`url (biblio-crossref--url arg))
+    (`parse-buffer (biblio-crossref--parse-search-results))
+    (`register (add-to-list 'biblio-backends #'biblio-crossref-backend))))
+
 ;;;###autoload
-(defun crossref-lookup (query)
-  "Look up QUERY on CrossRef."
-  (interactive (list (biblio-read-query "CrossRef")))
-  (biblio-lookup query #'biblio-crossref--url #'biblio-crossref--parse-region))
+(add-hook 'biblio-init-hook #'biblio-crossref-backend)
+
+;;;###autoload
+(defun crossref-lookup ()
+  "Start a CrossRef search."
+  (interactive)
+  (biblio-lookup #'biblio-crossref-backend))
 
 (provide 'biblio-crossref)
 ;;; biblio-crossref.el ends here

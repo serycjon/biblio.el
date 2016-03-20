@@ -98,7 +98,6 @@ Join all STRINGS using SEPARATOR."
 (defun biblio-check-for-retrieval-error (events &rest allowed-errors)
   "Return list of errors in EVENTS.
 If any of these errors is no in ALLOWED-ERRORS, signal an error."
-  (message "Got events %S" (biblio--plist-to-alist events))
   (let ((errors (delq nil (mapcar #'biblio--event-error-code (biblio--plist-to-alist events)))))
     (dolist (err errors)
       (unless (or (eq (car err) 'url-queue-timeout) (member err allowed-errors))
@@ -240,19 +239,28 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
     (completing-read prompt collection predicate require-match
                      initial-input hist def inherit-input-method)))
 
+(defun biblio-completing-read-alist (prompt collection &optional predicate require-match
+                                            initial-input hist def inherit-input-method)
+  "Same as `biblio-completing-read', when COLLECTION in an alist.
+Complete with the `car's, and return the `cdr' of the result.
+PROMPT, COLLECTION, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
+HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
+  (let ((choices (mapcar #'car collection)))
+    (cdr (assoc (biblio-completing-read
+                 prompt choices predicate require-match
+                 initial-input hist def inherit-input-method)
+                collection))))
+
 (defun biblio--read-selection-extensible-action ()
   "Read an action from `biblio-selection-mode-actions-alist'."
-  (let ((choices (mapcar #'car biblio-selection-mode-actions-alist)))
-    (-> (biblio-completing-read "Action: " choices nil t)
-        (assoc biblio-selection-mode-actions-alist)
-        (cdr)
-        (list))))
+  (biblio-completing-read-alist
+   "Action: " biblio-selection-mode-actions-alist nil t))
 
 (defun biblio--selection-extensible-action (action)
   "Run ACTION with metadata of current entry.
 Interactively, query for ACTION from
 `biblio-selection-mode-actions-alist'."
-  (interactive (biblio--read-selection-extensible-action))
+  (interactive (list (biblio--read-selection-extensible-action)))
   (-if-let* ((metadata (biblio--selection-metadata-at-point)))
       (funcall action metadata)
     (user-error "No entry at point")))
@@ -374,15 +382,13 @@ space after the record."
     (setq buffer-read-only t)
     (current-buffer)))
 
-(defun biblio--callback (source-buffer parse-buffer-function)
+(defun biblio--callback (source-buffer backend)
   "Generate a search results callback for SOURCE-BUFFER.
-Results are parsed with PARSE-BUFFER-FUNCTION.  It should be a
-function taking two arguments delimiting a region, and returning
-a list of results."
+Results are parsed with (BACKEND 'parse-buffer)."
   (biblio-generic-url-callback
    (lambda (_buffer-or-errors)
      "Parse results of bibliographic search."
-     (->> (funcall parse-buffer-function)
+     (->> (funcall backend 'parse-buffer)
           (biblio-insert-results source-buffer)
           (pop-to-buffer)))))
 
@@ -390,16 +396,79 @@ a list of results."
 
 (defvar biblio--search-history nil)
 
-(defun biblio-read-query (source-name)
-  "Read a search query, prompting with SOURCE-NAME."
-  (read-string (format "%s query: " source-name) nil 'biblio--search-history))
+(defvar biblio-backends nil
+  "List of biblio backends.
+This list is generally populated through `biblio-init-hook',
+which is called by `biblio-collect-backends'.
 
-(defun biblio-lookup (query url-function parse-buffer-function)
-  "Lookup QUERY.
-Format query with (URL-FUNCTION query), and parse results using
-PARSE-BUFFER-FUNCTION (as described in `biblio--callback')"
-  (biblio-url-retrieve (funcall url-function query)
-                       (biblio--callback (current-buffer) parse-buffer-function)))
+
+Each backend is a function that take a variable number of
+arguments.  The first argument is a command; the rest are
+arguments to this specific command.  The command is one of the
+following:
+
+`name': (no arguments) The name of the backend, displayed when picking a
+backend from a list.
+
+`prompt': (no arguments) The string used when querying the user for a search
+term to feed this backend.
+
+`url': (one argument, QUERY) Create a URL to query the backend's API.
+
+`parse-buffer': (on argument, BUFFER) Parse the contents of
+BUFFER (current at the time of the call) and return a list of
+results.
+
+For examples of backends, see one of `biblio-crossref-backend'
+and `biblio-dblp-backend'.
+
+
+To register your backend automatically, you may want to add a
+`register' command:
+
+`register': Add the current backend to `biblio-backends'.
+Something like (add-to-list \\='biblio-backends \\='THIS-BACKEND).
+
+Then it's enough to add your backend to `biblio-init-hook':
+
+;;;###autoload
+\(add-hook \\='biblio-init-hook \\='YOUR-BACKEND-HERE).")
+
+(defvar biblio-init-hook nil
+  "Hook run before every search.
+Each function is called with one argument, `register'.  This
+makes it possible to register backends by adding them directly to
+this hook, and making them react to `register' by adding
+themselves to biblio-backends.")
+
+(defun biblio-collect-backends ()
+  "Populate `biblio-backends' and return that."
+  (run-hook-with-args 'biblio-init-hook 'register)
+  biblio-backends)
+
+(defun biblio--named-backends ()
+  "Collect an alist of (NAME . BACKEND)."
+  (seq-map (lambda (b) (cons (funcall b 'name) b)) (biblio-collect-backends)))
+
+(defun biblio--select-backend ()
+  "Run `biblio-init-hook', then pick a backend from `biblio-backend'."
+  (biblio-completing-read-alist "Backend: " (biblio--named-backends) nil t))
+
+(defun biblio--lookup-1 (backend query)
+  "Just like `biblio-lookup' on BACKEND, but use QUERY."
+  (biblio-url-retrieve
+   (funcall backend 'url query)
+   (biblio--callback (current-buffer) backend)))
+
+;;;###autoload
+(defun biblio-lookup (backend)
+  "Perform a search using BACKEND, prompting for a query.
+BACKEND should be a function obeying the interface described in
+the docstring of `biblio-backends'."
+  (interactive (list (biblio--select-backend)))
+  (biblio--lookup-1 backend
+                    (let* ((prompt (funcall backend 'prompt)))
+                      (read-string prompt nil 'biblio--search-history))))
 
 (provide 'biblio-core)
 ;;; biblio-core.el ends here
