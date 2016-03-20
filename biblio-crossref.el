@@ -45,20 +45,17 @@
 (defun biblio-crossref--format-author (author)
   "Format AUTHOR for CrossRef search results."
   (let-alist author
-    (biblio-join
-     " " ""
-     .given .family (biblio-parenthesize (biblio-crossref--format-affiliation .affiliation)))))
+    (biblio-join " "
+                 .given .family (biblio-parenthesize (biblio-crossref--format-affiliation .affiliation)))))
 
 (defun biblio-crossref--extract-interesting-fields (item)
   "Prepare a CrossRef search result ITEM for display."
   (let-alist item
     (list (cons 'doi .DOI)
-          (cons 'title (biblio-join
-                        " " "(no title)"
-                        (biblio-string-join .title ", ")
-                        (biblio-parenthesize (biblio-string-join .subtitle ", "))))
-          (cons 'authors (apply #'biblio-join ", " "(no authors)"
-                                (biblio-remove-empty (seq-map #'biblio-crossref--format-author .author))))
+          (cons 'title (biblio-join " "
+                                    (biblio-string-join .title ", ")
+                                    (biblio-parenthesize (biblio-string-join .subtitle ", "))))
+          (cons 'authors (seq-map #'biblio-crossref--format-author .author))
           (cons 'publisher .publisher)
           (cons 'container .container-title)
           (cons 'references (seq-concatenate 'list (list .DOI) .isbn))

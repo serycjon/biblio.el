@@ -381,17 +381,17 @@ Interactively, query for ACTION from
   `(biblio--with-text-property 'face ,face
      ,@body))
 
-(defun biblio-join (sep fallback &rest strs)
-  "Join STRS with SEP, unless empty; if empty, return FALLBACK."
+(defun biblio-join (sep &rest strs)
+  "Join non-empty elements of STRS with SEP."
+  (declare (indent 1))
   (let ((strs (biblio-remove-empty strs)))
-    (if (seq-empty-p strs)
-        fallback
-      (biblio-string-join strs sep))))
+    (biblio-string-join strs sep)))
 
 (defun biblio-insert-with-prefix (prefix &rest strs)
   "Like INSERT with PREFIX and STRS, but set `wrap-prefix'.
 That is, the inserted text gets a `wrap-prefix' made of enough
 white space to align with the end of PREFIX."
+  (declare (indent 1))
   (biblio--with-text-property 'wrap-prefix (make-string (length prefix) ?\s)
     (apply #'insert prefix strs)))
 
@@ -413,12 +413,17 @@ space after the record."
   (biblio--with-text-property 'biblio-metadata item
     (let-alist item
       (biblio-with-fontification 'font-lock-function-name-face
-        (biblio-insert-with-prefix "> " .title))
+        (biblio-insert-with-prefix "> " (or .title "(no title)")))
       (insert "\n")
       (biblio-with-fontification 'font-lock-doc-face
-        (biblio-insert-with-prefix "  " .authors))
+        (let ((authors (seq-remove #'seq-empty-p .authors)))
+          (biblio-insert-with-prefix "  " (if authors
+                                              (biblio-string-join authors ", ")
+                                            "(no authors)"))))
       (biblio-with-fontification 'font-lock-comment-face
         (biblio--insert-detail "  In: " .container t)
+        (biblio--insert-detail "  Type: " .type t)
+        (biblio--insert-detail "  Category: " .category t)
         (biblio--insert-detail "  Publisher: " .publisher t)
         (biblio--insert-detail "  References: " .references t)
         (biblio--insert-detail "  URL: " .url t)

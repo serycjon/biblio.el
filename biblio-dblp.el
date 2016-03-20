@@ -46,8 +46,7 @@
   "Prepare a DBLP search result ITEM for display."
   (let-alist (biblio-alist-get 'info item)
     (list (cons 'title (cadr .title))
-          (cons 'authors (apply #'biblio-join ", " "(no authors)"
-                                (seq-map #'cl-caddr (cdr .authors))))
+          (cons 'authors (seq-map #'cl-caddr (cdr .authors)))
           (cons 'container (cadr .venue))
           (cons 'references nil)
           (cons 'type (cadr .type))

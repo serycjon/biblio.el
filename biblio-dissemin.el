@@ -77,9 +77,7 @@
   (let-alist paper
     (biblio-insert-result
      (list (cons 'title .title)
-           (cons 'authors
-                 (apply #'biblio-join ", " "(no authors)"
-                        (seq-map #'biblio-dissemin--format-author .authors)))
+           (cons 'authors (seq-map #'biblio-dissemin--format-author .authors))
            (cons 'open-access-status
                  (dissemin--translate-classification .classification)))
      t)
