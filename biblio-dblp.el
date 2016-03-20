@@ -26,7 +26,7 @@
 ;; Lookup and download bibliographic records from DBLP (a great source of
 ;; references for Computer Science papers) using `dblp-lookup'.
 ;;
-;; This package uses `biblio-selection-mode', and is part of the more general
+;; This package uses `biblio-selection-mode', and plugs into the more general
 ;; `biblio' package (which see for more documentation).
 
 ;;; Code:

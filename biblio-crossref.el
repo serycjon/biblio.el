@@ -26,7 +26,7 @@
 ;; Lookup and download bibliographic records from CrossRef (a very nicely
 ;; curated metadata engine) using `crossref-lookup'.
 ;;
-;; This package uses `biblio-selection-mode', and is part of the more general
+;; This package uses `biblio-selection-mode', and plugs into the more general
 ;; `biblio' package (which see for more documentation).
 
 ;;; Code:
