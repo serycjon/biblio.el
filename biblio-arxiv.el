@@ -23,8 +23,9 @@
 
 ;;; Commentary:
 ;;
-;; Lookup and download bibliographic records from arXiv using `arXiv-lookup'.
-;; When a DOI is available, use that metadata; otherwise, use arXiv's metadata.
+;; Lookup and download bibliographic records from arXiv using `arxiv-lookup'.
+;; When a DOI is available, the metadata is fetched from the DOI's issuer;
+;; otherwise, this package uses arXiv's metadata to generate an entry.
 ;;
 ;; This package uses `biblio-selection-mode', and plugs into the more general
 ;; `biblio' package (which see for more documentation).
