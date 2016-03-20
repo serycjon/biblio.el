@@ -84,6 +84,7 @@
 
 (require 'biblio-core)
 (require 'biblio-doi)
+(require 'biblio-arxiv)
 (require 'biblio-crossref)
 (require 'biblio-dblp)
 (require 'biblio-dissemin)
