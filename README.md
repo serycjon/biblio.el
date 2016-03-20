@@ -40,3 +40,25 @@ list of results in `biblio-selection-mode`.  In that mode, use:
 * To find publications by computer scientist Leslie Lamport, use `M-x dblp-lookup RET author:Lamport RET` (see more info about DBLP's syntax at <http://dblp.uni-trier.de/search/>)
 
 * To check whether an article is available online for example Stallman's paper on EMACS, use `o` in the list of results. This only works with CrossRef at the moment. For example: `M-x crossref-lookup RET emacs stallman RET`, then press `o Dissemin RET`.
+
+## Adding new backends
+
+The extensibility mechanism is inspired by the one of company-mode. See the docstring of `biblio-backends`. Here is the definition of `biblio-dblp-backend`, for example:
+
+```elisp
+(defun biblio-dblp-backend (command &optional arg &rest _more)
+  "A DBLP backend for biblio.el.
+COMMAND, ARG, MORE: See `biblio-backends'."
+  (interactive (list 'interactive))
+  (pcase command
+    (`name "DBLP")
+    (`prompt "DBLP query: ")
+    (`url (biblio-dblp--url arg))
+    (`parse-buffer (biblio-dblp--parse-search-results))
+    (`register (add-to-list 'biblio-backends #'biblio-dblp-backend))))
+
+;;;###autoload
+(add-hook 'biblio-init-hook #'biblio-dblp-backend)
+```
+
+Note how the autoload registers the backend without loading the entire file.  When `biblio-lookup` is called by the user, it will run all functions in `biblio-init-hook` with `'register`, and the `dblp` backend will be added to the list of backends add that point.
