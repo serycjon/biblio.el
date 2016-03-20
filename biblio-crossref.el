@@ -76,7 +76,7 @@
   "Create a CrossRef url to look up QUERY."
   (format "http://api.crossref.org/works?query=%s" (url-encode-url query)))
 
-(defun biblio-crossref-backend (command &optional arg &rest _more)
+(defun biblio-crossref-backend (command &optional arg &rest more)
   "A CrossRef backend for biblio.el.
 COMMAND, ARG, MORE: See `biblio-backends'."
   (pcase command

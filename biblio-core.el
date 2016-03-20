@@ -26,6 +26,7 @@
 ;; package; for user interfaces, see any of `biblio-crossref', `biblio-dblp',
 ;; `biblio-doi', and `biblio-dissemin', and the more general `biblio' package.
 
+(require 'bibtex)
 (require 'browse-url)
 (require 'ido)
 (require 'json)
@@ -79,6 +80,42 @@ Join all STRINGS using SEPARATOR."
   (mapconcat 'identity strings separator))
 
 ;;; Utilities
+
+(defvar biblio-bibtex-entry-format
+  '(opts-or-alts numerical-fields page-dashes whitespace
+                 inherit-booktitle realign last-comma delimiters
+                 unify-case braces strings sort-fields)
+  "Format to use in `biblio-format-bibtex'.
+See `bibtex-entry-format' for details; this list is all
+transformations, except errors for missing fields.")
+
+(defun biblio--cleanup-bibtex (autokey)
+  "Cleanup BibTeX entry starting at point.
+AUTOKEY: see `biblio-format-bibtex'."
+  (let ((bibtex-entry-format biblio-bibtex-entry-format)
+        (bibtex-align-at-equal-sign t)
+        (bibtex-autokey-edit-before-use nil)
+        (bibtex-autokey-year-title-separator ":"))
+    (condition-case-unless-debug _err
+        (bibtex-clean-entry autokey)
+      ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
+      (error))))
+
+(defun biblio-format-bibtex (bibtex &optional autokey)
+  "Format BIBTEX entry.
+WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
+  (with-temp-buffer
+    (bibtex-mode)
+    (bibtex-set-dialect 'biblatex) ;; Use biblatex to allow for e.g. @Online
+    (save-excursion
+      (insert (biblio-strip bibtex)))
+    (save-excursion
+      (when (search-forward "@data{" nil t)
+        (replace-match "@misc{")))
+    (biblio--cleanup-bibtex autokey)
+    (if (fboundp 'font-lock-ensure) (font-lock-ensure)
+      (with-no-warnings (font-lock-fontify-buffer)))
+    (buffer-string)))
 
 (defun biblio--beginning-of-response-body ()
   "Move point to beginning of response body."

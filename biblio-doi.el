@@ -32,7 +32,6 @@
 ;; This package integrates with `biblio-selection-mode', and is part of the more
 ;; general `biblio' package (which see for more documentation).
 
-(require 'bibtex)
 (require 'biblio-core)
 
 ;;; Code:
@@ -68,23 +67,6 @@ requests a generic format and crates the BibTeX on its own."
     (setq url-mime-accept-string biblio-doi--saved-url-mime-accept-string))
   (setq biblio-doi--saved-url-mime-accept-string nil))
 
-(defun biblio-doi--format-bibtex (bibtex)
-  "Format BIBTEX entry."
-  (condition-case-unless-debug _err
-      (with-temp-buffer
-        (bibtex-mode)
-        (bibtex-set-dialect)
-        (insert (biblio-strip bibtex))
-        (goto-char (point-min))
-        (when (search-forward "@data{" nil t)
-          (replace-match "@misc{"))
-        (goto-char (point-min))
-        (let ((bibtex-entry-format t)
-              (bibtex-align-at-equal-sign t))
-          (bibtex-clean-entry))
-        (buffer-string))
-    (error bibtex)))
-
 (defun biblio-doi--insert (bibtex buffer)
   "Insert formatted BIBTEX into BUFFER."
   (with-current-buffer buffer
@@ -95,7 +77,7 @@ requests a generic format and crates the BibTeX on its own."
 BUFFER-OR-ERRORS, FORWARD-TO: see there."
   (funcall forward-to
            (when (bufferp buffer-or-errors)
-             (biblio-doi--format-bibtex (biblio-response-as-utf-8)))))
+             (biblio-format-bibtex (biblio-response-as-utf-8)))))
 
 (defun biblio-doi--generic-url-callback (cleanup-fn forward-to)
   "Make an URL-ready callback.
