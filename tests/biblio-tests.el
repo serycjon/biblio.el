@@ -26,11 +26,11 @@
 
 ;;; Code:
 
-(require 'biblio-core)
-(require 'buttercup)
-
 (when (require 'undercover nil t)
   (undercover "*.el"))
+
+(require 'biblio-core)
+(require 'buttercup)
 
 (defconst stallman-bibtex "@ARTIcle{Stallman_1981, title={EMACS the extensible,
 customizable self-documenting display editor}, volume={2},

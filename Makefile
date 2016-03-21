@@ -1,12 +1,17 @@
-elc:
-	cask build
+EMACS ?= emacs
+CASK = env --unset INSIDE_EMACS cask
+
+all: test elc
 
 # Ignores failures, since dependences of ‘biblio’ are locally satisfied
 depends:
-	cask install || true
+	$(CASK) install || true
+
+elc: depends
+	$(CASK) build
 
 clean:
-	cask clean-elc
+	$(CASK) clean-elc
 
-test: clean elc
-	cask exec buttercup -L . -L tests
+test: depends elc clean # Must run clean to make tests work
+	$(CASK) exec buttercup -L . -L tests
