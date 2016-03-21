@@ -80,10 +80,13 @@ COMMAND, ARG, MORE: See `biblio-backends'."
 
 Note how the autoload registers the backend without loading the entire file.
 When `biblio-lookup` is called by the user, it will run all functions in
-`biblio-init-hook` with `'register`, and the `dblp` backend will be added to the
-list of backends add that point.
+`biblio-init-hook` with `'register` as their first argument, and the `dblp`
+backend will be added to the list of backends add that point.
 
 ### Adding new actions
 
 The selection mode menu has an extended action key, `o`.  The only extension at
-the moment is Dissemin.
+the moment is Dissemin. Extensions `cons`es `(label . function)` added to
+`biblio-selection-mode-actions-alist`; function is called with the metadata of
+the current entry when the user selects `label` from the list of extensions
+after pressing `o`.
