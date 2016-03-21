@@ -4,7 +4,7 @@
 
 ;; Author: Clément Pit-Claudel
 ;; Version: 0.1
-;; Package-Requires: ((biblio-core "0.0") (biblio-doi "0.0") (biblio-dblp "0.0") (biblio-crossref "0.0") (biblio-dissemin "0.0"))
+;; Package-Requires: ((biblio-core "0.0") (biblio-doi "0.0") (biblio-arxiv "0.0") (biblio-dblp "0.0") (biblio-crossref "0.0") (biblio-dissemin "0.0"))
 ;; Keywords: bib, tex, convenience, hypermedia
 ;; URL: http://github.com/cpitclaudel/biblio.el
 
