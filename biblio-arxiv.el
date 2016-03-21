@@ -37,11 +37,11 @@
 (require 'parse-time)
 
 (defgroup biblio-arxiv nil
-  "ArXiv support in biblio.el"
+  "arXiv support in biblio.el"
   :group 'biblio)
 
 (defcustom biblio-arxiv-bibtex-header "online"
-  "Which header to use for generated BibTeX entries."
+  "Which header to use for BibTeX entries generated from arXiv metadata."
   :group 'biblio
   :type 'string)
 

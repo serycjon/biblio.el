@@ -1,4 +1,4 @@
-;;; biblio.el --- Browse and import bibliographic references from CrossRef, DBLP, dx.doi.org, and other sources, by DOI or by keywords -*- lexical-binding: t -*-
+;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, dx.doi.org, and other sources, by DOI or by keywords -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
@@ -30,19 +30,19 @@
 ;;
 ;; ## Supported sources:
 ;;
-;; * `dx.doi.org' to retrieve BibTeX records from DOIs
-;; * `CrossCite' to format BibTeX records if unavailable from a DOI's owner
-;; * `CrossRef' for general searches
-;; * `DBLP' specialized in computer science
-;; * `Dissemin' to gather information about a particular publication, such as its
-;;   open acces status
+;; * `CrossRef', an exhaustive academic search engine (recommended)
+;; * `arXiv', an archive of pre-prints in various scientific fields
+;; * `DBLP', a database of Computer Science publications
+;; * `dx.doi.org', a DOI resolver (to retrieve BibTeX records from DOIs)
+;; * `CrossCite', an alternative DOI resolver and BibTeX formatting service
+;; * `Dissemin', a database tracking the open access status of scholarly articles
 ;;
 ;; ## Usage
 ;;
-;; Quick start: `M-x biblio-lookup'.  Each source can also be accessed
-;; independently:
+;; Quick start: `M-x biblio-lookup'.  Each source can also be accessed independently:
 ;;
 ;; * `M-x crossref-lookup' to query CrossRef
+;; * `M-x arxiv-lookup` to query arXiv
 ;; * `M-x dblp-lookup' to query DBLP
 ;; * `M-x doi-insert' to insert a BibTeX record by DOI
 ;; * `M-x dissemin-lookup' to show information about the open access status of a
