@@ -195,6 +195,94 @@ URL and CALLBACK; see `url-queue-retrieve'"
   "Cleanup DOI string."
   (biblio-strip (replace-regexp-in-string "https?://dx.doi.org/" "" doi)))
 
+;;; Help with major mode
+
+(defsubst biblio--as-list (x)
+  "Make X a list, if it isn't."
+  (if (consp x) x (list x)))
+
+(defun biblio--map-keymap (func map)
+  "Call `map-keymap' on FUNC and MAP, and collect the results."
+  (let ((out))
+    (map-keymap (lambda (&rest args) (push (apply func args) out)) map)
+    out))
+
+(defun biblio--flatten-map (keymap &optional prefix)
+  "Flatten KEYMAP, prefixing its keys with PREFIX.
+This should really be in Emacs core (in Elisp), instead of being
+implemented in C (at least for sparse keymaps).  Don't run this on
+non-sparse keymaps."
+  (nreverse
+   (cond
+    ((keymapp keymap)
+     (seq-map (lambda (key-value)
+                "Add PREFIX to key in KEY-VALUE."
+                (cons (append prefix (biblio--as-list (car key-value)))
+                      (cdr key-value)))
+              (delq nil
+                    (apply
+                     #'seq-concatenate
+                     'list (biblio--map-keymap
+                            (lambda (k v)
+                              "Return a list of bindings in V, prefixed by K."
+                              (biblio--flatten-map v (biblio--as-list k)))
+                            keymap)))))
+    ;; This breaks if keymap is a symbol whose function cell is a keymap
+    ((symbolp keymap)
+     (list (cons prefix keymap))))))
+
+(defun biblio--group-alist (alist)
+  "Return a copy of ALIST whose keys are lists of keys, grouped by value.
+That is, if two key map to `eq' values, they are grouped."
+  (let ((map (make-hash-table :test 'eq))
+        (new-alist nil))
+    (pcase-dolist (`(,key . ,value) alist)
+      (puthash value (cons key (gethash value map)) map))
+    (pcase-dolist (`(,_ . ,value) alist)
+      (-when-let* ((keys (gethash value map)))
+        (push (cons keys value) new-alist)
+        (puthash value nil map)))
+    (nreverse new-alist)))
+
+(defun biblio--quote (str)
+  "Quote STR and call `substitute-command-keys' on it."
+  (if str (substitute-command-keys (concat "`" str "'")) ""))
+
+(defun biblio--quote-keys (keys)
+  "Quote and concatenate keybindings in KEYS."
+  (biblio-string-join
+   (seq-map (lambda (keyseq)
+              (biblio--quote (ignore-errors (help-key-description keyseq nil))))
+            keys)
+   ", "))
+
+(defun biblio--brief-docs (command)
+  "Return first line of documentation of COMMAND."
+  (let ((docs (or (ignore-errors (documentation command t)) "")))
+    (string-match "\\(.*\\)$" docs)
+    (match-string-no-properties 1 docs)))
+
+(defun biblio--selection-help-1 (keyseqs-command)
+  "Print help on KEYSEQS-COMMAND to standard output."
+  ;; (biblio-with-fontification 'font-lock-function-name-face
+  (insert (format "%s (%S)\n"
+                  (biblio--quote-keys (car keyseqs-command))
+                  (cdr keyseqs-command)))
+  (biblio-with-fontification 'font-lock-doc-face
+    (insert (format "  %s\n\n" (biblio--brief-docs (cdr keyseqs-command))))))
+
+(defun biblio--help-with-major-mode ()
+  "Display help with current major mode."
+  (let ((buf (format "*%S help*" major-mode)))
+    (with-help-window buf
+      (princ (format "Help with %s\n\n" (biblio--quote (symbol-name major-mode))))
+      (let ((bindings (nreverse
+                       (biblio--group-alist
+                        (biblio--flatten-map
+                         (current-local-map))))))
+        (with-current-buffer buf
+          (seq-do #'biblio--selection-help-1 bindings))))))
+
 ;;; Interaction
 
 (defconst biblio--search-result-marker-regexp "^> "
@@ -240,12 +328,12 @@ Uses .url, and .doi as a fallback."
   (message "Killed bibtex entry for %S." (biblio-alist-get 'title entry)))
 
 (defun biblio--selection-copy ()
-  "Copy BibTeX of entry at point."
+  "Copy BibTeX of current entry at point."
   (interactive)
   (biblio--selection-forward-bibtex #'biblio--selection-copy-callback))
 
 (defun biblio--selection-copy-quit ()
-  "Copy BibTeX of entry at point and quit results."
+  "Copy BibTeX of current entry at point and close results."
   (interactive)
   (biblio--selection-forward-bibtex #'biblio--selection-copy-callback t))
 
@@ -262,12 +350,12 @@ Uses .url, and .doi as a fallback."
   (message "Inserted bibtex entry for %S." (biblio-alist-get 'title entry)))
 
 (defun biblio--selection-insert ()
-  "Insert BibTeX of entry in source buffer."
+  "Insert BibTeX of current entry into source buffer."
   (interactive)
   (biblio--selection-forward-bibtex #'biblio--selection-insert-callback))
 
 (defun biblio--selection-insert-quit ()
-  "Insert BibTeX of entry in source buffer and quit results."
+  "Insert BibTeX of current entry into source buffer and close results."
   (interactive)
   (biblio--selection-forward-bibtex #'biblio--selection-insert-callback t))
 
@@ -295,7 +383,7 @@ Each element should be in the for (LABEL . FUNCTION); FUNCTION
 will be called with the metadata of the current item.")
 
 (defun biblio-completing-read (prompt collection &optional predicate require-match
-                                      initial-input hist def inherit-input-method)
+                                initial-input hist def inherit-input-method)
   "Complete using ido, unless user picked another completion package.
 PROMPT, COLLECTION, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
 HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
@@ -306,7 +394,7 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
                      initial-input hist def inherit-input-method)))
 
 (defun biblio-completing-read-alist (prompt collection &optional predicate require-match
-                                            initial-input hist def inherit-input-method)
+                                      initial-input hist def inherit-input-method)
   "Same as `biblio-completing-read', when COLLECTION in an alist.
 Complete with the `car's, and return the `cdr' of the result.
 PROMPT, COLLECTION, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
@@ -323,7 +411,7 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
    "Action: " biblio-selection-mode-actions-alist nil t))
 
 (defun biblio--selection-extended-action (action)
-  "Run ACTION with metadata of current entry.
+  "Run an ACTION with metadata of current entry.
 Interactively, query for ACTION from
 `biblio-selection-mode-actions-alist'."
   (interactive (list (biblio--read-selection-extensible-action)))
@@ -331,12 +419,17 @@ Interactively, query for ACTION from
       (funcall action metadata)
     (user-error "No entry at point")))
 
+(defun biblio--selection-help ()
+  "Show help on local keymap."
+  (interactive)
+  (biblio--help-with-major-mode))
+
 (defvar biblio-selection-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<down>") #'biblio--selection-next)
-    (define-key map (kbd "C-n") #'biblio--selection-next)
     (define-key map (kbd "<up>") #'biblio--selection-previous)
     (define-key map (kbd "C-p") #'biblio--selection-previous)
+    (define-key map (kbd "<down>") #'biblio--selection-next)
+    (define-key map (kbd "C-n") #'biblio--selection-next)
     (define-key map (kbd "c") #'biblio--selection-copy)
     (define-key map (kbd "RET") #'biblio--selection-browse)
     (define-key map (kbd "M-w") #'biblio--selection-copy)
@@ -346,6 +439,8 @@ Interactively, query for ACTION from
     (define-key map (kbd "I") #'biblio--selection-insert-quit)
     (define-key map (kbd "C-y") #'biblio--selection-insert-quit)
     (define-key map (kbd "x") #'biblio--selection-extended-action)
+    (define-key map (kbd "h") #'biblio--selection-help)
+    (define-key map (kbd "?") #'biblio--selection-help)
     (define-key map (kbd "q") #'quit-window)
     map)
   "Keybindings for Bibliographic search results.")
@@ -356,7 +451,8 @@ Interactively, query for ACTION from
   (hl-line-mode)
   (setq truncate-lines nil)
   (visual-line-mode)
-  (setq-local cursor-type nil))
+  (setq-local cursor-type nil)
+  (message "Tip: show `biblio-selection-mode''s quick reference with `h'"))
 
 ;;; Printing search results
 
@@ -578,8 +674,8 @@ BACKEND should be a function obeying the interface described in
 the docstring of `biblio-backends'."
   (interactive (list (biblio--select-backend)))
   (biblio--lookup-1 backend
-                    (let* ((prompt (funcall backend 'prompt)))
-                      (read-string prompt nil 'biblio--search-history))))
+              (let* ((prompt (funcall backend 'prompt)))
+                (read-string prompt nil 'biblio--search-history))))
 
 (defun biblio-kill-buffers ()
   "Kill all `biblio-selection-mode' buffers."
@@ -589,6 +685,10 @@ the docstring of `biblio-backends'."
                (eq (buffer-local-value 'major-mode buf)
                    'biblio-selection-mode))
       (kill-buffer buf))))
+
+;; Local Variables:
+;; nameless-current-name: "biblio"
+;; End:
 
 (provide 'biblio-core)
 ;;; biblio-core.el ends here
