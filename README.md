@@ -30,7 +30,7 @@ list of results in `biblio-selection-mode`.  In that mode, use:
 * `RET` to visit the corresponding web page
 * `c` or `M-w` to copy the BibTeX record of the current entry
 * `i` or `C-y` to insert the BibTeX record of the current entry
-* `o` to run an extended action, such as fetching a Dissemin record
+* `x` to run an extended action, such as fetching a Dissemin record
 
 `C` and `I` do the same as `c` and `i`, but additionally close the search window.
 
@@ -49,7 +49,7 @@ list of results in `biblio-selection-mode`.  In that mode, use:
   <http://dblp.uni-trier.de/search/>)
 
 * To check whether an article is available online for example Stallman's paper
-  on EMACS, use `o` in the list of results.  This only works with CrossRef at
+  on EMACS, use `x` in the list of results.  This only works with CrossRef at
   the moment.  For example: `M-x crossref-lookup RET emacs stallman RET`, then
   press `o Dissemin RET`.
 
@@ -85,8 +85,8 @@ backend will be added to the list of backends add that point.
 
 ### Adding new actions
 
-The selection mode menu has an extended action key, `o`.  The only extension at
+The selection mode menu has an extended action key, `x`.  The only extension at
 the moment is Dissemin. Extensions `cons`es `(label . function)` added to
 `biblio-selection-mode-actions-alist`; function is called with the metadata of
 the current entry when the user selects `label` from the list of extensions
-after pressing `o`.
+after pressing `x`.

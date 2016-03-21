@@ -318,7 +318,7 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
   (biblio-completing-read-alist
    "Action: " biblio-selection-mode-actions-alist nil t))
 
-(defun biblio--selection-extensible-action (action)
+(defun biblio--selection-extended-action (action)
   "Run ACTION with metadata of current entry.
 Interactively, query for ACTION from
 `biblio-selection-mode-actions-alist'."
@@ -341,7 +341,7 @@ Interactively, query for ACTION from
     (define-key map (kbd "i") #'biblio--selection-insert)
     (define-key map (kbd "I") #'biblio--selection-insert-quit)
     (define-key map (kbd "C-y") #'biblio--selection-insert-quit)
-    (define-key map (kbd "o") #'biblio--selection-extensible-action)
+    (define-key map (kbd "x") #'biblio--selection-extended-action)
     (define-key map (kbd "q") #'quit-window)
     map)
   "Keybindings for Bibliographic search results.")

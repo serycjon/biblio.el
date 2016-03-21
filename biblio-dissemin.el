@@ -26,7 +26,7 @@
 ;; Lookup publication records on Dissemin by DOI using `dissemin-lookup'.
 ;;
 ;; This package also plugs into `biblio-selection-mode' (provided by the
-;; `biblio-core' package, by adding an entry to the extended actions menu (`o')
+;; `biblio-core' package, by adding an entry to the extended actions menu (`x')
 ;; to quickly locate the Dissemin record of e.g. a CrossRef entry.
 
 ;;; Code:
