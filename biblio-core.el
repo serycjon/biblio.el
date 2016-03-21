@@ -378,8 +378,10 @@ Interactively, query for ACTION from
   "Apply FACE to text inserted by BODY."
   (declare (indent 1)
            (debug t))
-  `(biblio--with-text-property 'face ,face
-     ,@body))
+  (let ((beg-var (make-symbol "beg")))
+    `(let ((,beg-var (point)))
+       ,@body
+       (font-lock-append-text-property ,beg-var (point) 'face ,face))))
 
 (defun biblio-join (sep &rest strs)
   "Join non-empty elements of STRS with SEP."
@@ -404,6 +406,17 @@ NEWLINE is non-nil, add a newline before the main text."
   (unless (seq-empty-p items)
     (when newline (insert "\n"))
     (biblio-insert-with-prefix prefix items)))
+(defun biblio--browse-url (button)
+  "Open web browser on page pointed to by BUTTON."
+  (browse-url (button-label button)))
+
+(defun biblio--make-text-button (url)
+  "Make a text button pointing to URL."
+  (with-temp-buffer
+    (insert-text-button url
+                        'follow-link t
+                        'action #'biblio--browse-url)
+    (buffer-string)))
 
 (defun biblio-insert-result (item &optional no-sep)
   "Print a (prepared) bibliographic search result ITEM.
@@ -426,8 +439,8 @@ space after the record."
         (biblio--insert-detail "  Category: " .category t)
         (biblio--insert-detail "  Publisher: " .publisher t)
         (biblio--insert-detail "  References: " .references t)
-        (biblio--insert-detail "  URL: " .url t)
-        (biblio--insert-detail "  Open Access: " .open-access-status t))
+        (biblio--insert-detail "  Open Access: " .open-access-status t)
+        (biblio--insert-detail "  URL: " (biblio--make-text-button .url) t))
       (unless no-sep
         (insert "\n\n")))))
 

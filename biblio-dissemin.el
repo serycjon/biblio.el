@@ -31,7 +31,6 @@
 
 ;;; Code:
 
-(require 'browse-url)
 (require 'biblio-core)
 
 (defun biblio-dissemin--format-author (author)
@@ -39,17 +38,11 @@
   (let-alist author
     (format "%s %s" .name.first .name.last)))
 
-(defun biblio-dissemin--browse-url (button)
-  "Action for a URL BUTTON created by Dissemin."
-  (browse-url (button-label button)))
-
 (defun biblio-dissemin--insert-button (url prefix)
   "Insert a button pointing to URL, prefixed by PREFIX."
   (unless (seq-empty-p url)
     (insert "\n" prefix)
-    (insert-text-button url
-                        'follow-link t
-                        'action #'biblio-dissemin--browse-url)))
+    (insert (biblio-make-url-button url))))
 
 (defun biblio-dissemin--insert-record (record)
   "Insert a Dissemin RECORD entry into the current buffer."
