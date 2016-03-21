@@ -50,6 +50,10 @@ This variable is local to each search results buffer.")
   "Core of the biblio package."
   :group 'biblio)
 
+(defgroup biblio-faces nil
+  "Faces of the biblio package."
+  :group 'biblio)
+
 (defcustom biblio-synchronous nil
   "Whether bibliographic queries should be synchronous."
   :group 'biblio-core
@@ -397,6 +401,11 @@ white space to align with the end of PREFIX."
   (biblio--with-text-property 'wrap-prefix (make-string (length prefix) ?\s)
     (apply #'insert prefix strs)))
 
+(defface biblio-detail-header-face
+  '((t :slant normal))
+  "Face used for headers of details in `biblio-selection-mode'."
+  :group 'biblio-faces)
+
 (defun biblio--insert-detail (prefix items newline)
   "Insert PREFIX followed by ITEMS, if ITEMS has non-empty entries.
 If ITEMS is a list or vector, join its entries with “, ”.  If
@@ -405,7 +414,23 @@ NEWLINE is non-nil, add a newline before the main text."
     (setq items (apply #'biblio-join ", " items)))
   (unless (seq-empty-p items)
     (when newline (insert "\n"))
-    (biblio-insert-with-prefix prefix items)))
+    (let ((fontified (propertize prefix 'face 'biblio-detail-header-face)))
+      (biblio-insert-with-prefix fontified items))))
+
+(defun biblio--cleanup-field (text)
+  "Cleanup TEXT for presentation to the user."
+  (when text (replace-regexp-in-string "[ \r\n\t]+" " " text)))
+
+(defun biblio--prepare-authors (authors)
+  "Cleanup and join list of AUTHORS."
+  (let ((authors (seq-remove #'seq-empty-p authors)))
+    (if authors (biblio-string-join authors ", ")
+      "(no authors)")))
+
+(defun biblio--prepare-title (title)
+  "Cleanup TITLE for presentation to the user."
+  (or (biblio--cleanup-field title) "(no title)"))
+
 (defun biblio--browse-url (button)
   "Open web browser on page pointed to by BUTTON."
   (browse-url (button-label button)))
@@ -426,13 +451,10 @@ space after the record."
   (biblio--with-text-property 'biblio-metadata item
     (let-alist item
       (biblio-with-fontification 'font-lock-function-name-face
-        (biblio-insert-with-prefix "> " (or .title "(no title)")))
+        (biblio-insert-with-prefix "> " (biblio--prepare-title .title)))
       (insert "\n")
       (biblio-with-fontification 'font-lock-doc-face
-        (let ((authors (seq-remove #'seq-empty-p .authors)))
-          (biblio-insert-with-prefix "  " (if authors
-                                              (biblio-string-join authors ", ")
-                                            "(no authors)"))))
+        (biblio-insert-with-prefix "  " (biblio--prepare-authors .authors)))
       (biblio-with-fontification 'font-lock-comment-face
         (biblio--insert-detail "  In: " .container t)
         (biblio--insert-detail "  Type: " .type t)
