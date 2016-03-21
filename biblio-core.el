@@ -78,11 +78,6 @@ Return an alist of the property-value pairs in PLIST."
         (push (cons prop val) res)))
     (nreverse res)))
 
-(defsubst biblio-string-join (strings &optional separator)
-  "Copy of Emacs 24.5's `string-join'.
-Join all STRINGS using SEPARATOR."
-  (mapconcat 'identity strings separator))
-
 ;;; Utilities
 
 (defvar biblio-bibtex-entry-format
@@ -203,7 +198,7 @@ URL and CALLBACK; see `url-queue-retrieve'"
   "Join non-empty elements of STRS with SEP."
   (declare (indent 1))
   (let ((strs (biblio-remove-empty strs)))
-    (biblio-string-join strs sep)))
+    (mapconcat #'identity strs sep)))
 
 (defun biblio-join (sep &rest strs)
   "Join non-empty elements of STRS with SEP."
@@ -283,11 +278,9 @@ That is, if two key map to `eq' values, they are grouped."
 
 (defun biblio--quote-keys (keys)
   "Quote and concatenate keybindings in KEYS."
-  (biblio-string-join
-   (seq-map (lambda (keyseq)
-              (biblio--quote (ignore-errors (help-key-description keyseq nil))))
-            keys)
-   ", "))
+  (mapconcat (lambda (keyseq)
+               (biblio--quote (ignore-errors (help-key-description keyseq nil))))
+             keys ", "))
 
 (defun biblio--brief-docs (command)
   "Return first line of documentation of COMMAND."
@@ -525,7 +518,7 @@ NEWLINE is non-nil, add a newline before the main text."
 (defun biblio--prepare-authors (authors)
   "Cleanup and join list of AUTHORS."
   (let ((authors (seq-remove #'seq-empty-p authors)))
-    (if authors (biblio-string-join authors ", ")
+    (if authors (biblio-join-1 ", " authors)
       "(no authors)")))
 
 (defun biblio--prepare-title (title)

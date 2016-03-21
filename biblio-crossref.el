@@ -40,7 +40,7 @@
 
 (defun biblio-crossref--format-affiliation (affiliation)
   "Format AFFILIATION for CrossRef search results."
-  (biblio-string-join (seq-map (apply-partially #'biblio-alist-get 'name) affiliation) ", "))
+  (mapconcat (apply-partially #'biblio-alist-get 'name) affiliation ", "))
 
 (defun biblio-crossref--format-author (author)
   "Format AUTHOR for CrossRef search results."
@@ -53,8 +53,8 @@
   (let-alist item
     (list (cons 'doi .DOI)
           (cons 'title (biblio-join " "
-                                    (biblio-string-join .title ", ")
-                                    (biblio-parenthesize (biblio-string-join .subtitle ", "))))
+                         (biblio-join-1 ", " .title)
+                         (biblio-parenthesize (biblio-join-1 ", " .subtitle))))
           (cons 'authors (seq-map #'biblio-crossref--format-author .author))
           (cons 'publisher .publisher)
           (cons 'container .container-title)
