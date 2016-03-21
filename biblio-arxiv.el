@@ -134,7 +134,7 @@ COMMAND, ARG, MORE: See `biblio-backends'."
 (add-hook 'biblio-init-hook #'biblio-arxiv-backend)
 
 ;;;###autoload
-(defun arXiv-lookup ()
+(defun arxiv-lookup ()
   "Start an arXiv search."
   (interactive)
   (biblio-lookup #'biblio-arxiv-backend))
