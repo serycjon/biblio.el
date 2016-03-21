@@ -195,6 +195,34 @@ URL and CALLBACK; see `url-queue-retrieve'"
   "Cleanup DOI string."
   (biblio-strip (replace-regexp-in-string "https?://dx.doi.org/" "" doi)))
 
+(defun biblio-remove-empty (strs)
+  "Remove empty sequences from STRS."
+  (seq-remove #'seq-empty-p strs))
+
+(defun biblio-join (sep &rest strs)
+  "Join non-empty elements of STRS with SEP."
+  (declare (indent 1))
+  (let ((strs (biblio-remove-empty strs)))
+    (biblio-string-join strs sep)))
+
+(defmacro biblio--with-text-property (prop value &rest body)
+  "Set PROP to VALUE on text inserted by BODY."
+  (declare (indent 2)
+           (debug t))
+  (let ((beg-var (make-symbol "beg")))
+    `(let ((,beg-var (point)))
+       ,@body
+       (put-text-property ,beg-var (point) ,prop ,value))))
+
+(defmacro biblio-with-fontification (face &rest body)
+  "Apply FACE to text inserted by BODY."
+  (declare (indent 1)
+           (debug t))
+  (let ((beg-var (make-symbol "beg")))
+    `(let ((,beg-var (point)))
+       ,@body
+       (font-lock-append-text-property ,beg-var (point) 'face ,face))))
+
 ;;; Help with major mode
 
 (defsubst biblio--as-list (x)
@@ -460,34 +488,6 @@ Interactively, query for ACTION from
   "Add parentheses to STR, if not empty."
   (if (seq-empty-p str) ""
     (concat "(" str ")")))
-
-(defun biblio-remove-empty (strs)
-  "Remove empty sequences from STRS."
-  (seq-remove #'seq-empty-p strs))
-
-(defmacro biblio--with-text-property (prop value &rest body)
-  "Set PROP to VALUE on text inserted by BODY."
-  (declare (indent 2)
-           (debug t))
-  (let ((beg-var (make-symbol "beg")))
-    `(let ((,beg-var (point)))
-       ,@body
-       (put-text-property ,beg-var (point) ,prop ,value))))
-
-(defmacro biblio-with-fontification (face &rest body)
-  "Apply FACE to text inserted by BODY."
-  (declare (indent 1)
-           (debug t))
-  (let ((beg-var (make-symbol "beg")))
-    `(let ((,beg-var (point)))
-       ,@body
-       (font-lock-append-text-property ,beg-var (point) 'face ,face))))
-
-(defun biblio-join (sep &rest strs)
-  "Join non-empty elements of STRS with SEP."
-  (declare (indent 1))
-  (let ((strs (biblio-remove-empty strs)))
-    (biblio-string-join strs sep)))
 
 (defun biblio-insert-with-prefix (prefix &rest strs)
   "Like INSERT with PREFIX and STRS, but set `wrap-prefix'.
