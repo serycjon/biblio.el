@@ -53,6 +53,11 @@ list of results in `biblio-selection-mode`.  In that mode, use:
   the moment.  For example: `M-x crossref-lookup RET emacs stallman RET`, then
   press `o Dissemin RET`.
 
+## Setup
+
+Add [MELPA](http://melpa.org/#/getting-started) to your package sources, then
+use `M-x package-install RET biblio RET`.
+
 ## Extending `biblio.el`
 
 ### Adding new backends
