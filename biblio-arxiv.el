@@ -84,9 +84,15 @@ primaryClass = {%s}}"
   "Extract identifier from ID, the URL of an arXiv abstract."
   (replace-regexp-in-string "http://arxiv.org/abs/" "" id))
 
+(defconst biblio-arxiv--iso-8601-regexp
+  (concat "\\([0-9][0-9][0-9][0-9]\\)-\\([0-9][0-9]\\)-\\([0-9][0-9]\\)" "T"
+          "\\([0-9][0-9]\\):\\([0-9][0-9]\\):\\([0-9][0-9]\\)"
+          "\\(?:" "-" "\\([0-9][0-9]\\):\\([0-9][0-9]\\)" "\\)?"))
+
 (defun biblio-arxiv--extract-year (date)
   "Parse an arXiv DATE and extract the year."
-  (nth 5 (decode-time (parse-iso8601-time-string date))))
+  (when (string-match biblio-arxiv--iso-8601-regexp date)
+    (match-string 1 date)))
 
 (defun biblio-arxiv--extract-interesting-fields (entry)
   "Prepare an arXiv search result ENTRY for display."
