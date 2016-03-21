@@ -57,7 +57,7 @@ eprint = {%s},
 primaryClass = {%s}}"
             biblio-arxiv-bibtex-header
             (apply #'biblio-join " AND " .authors)
-            .title .year .id .category)))
+            .title .year .identifier .category)))
 
 (defun biblio-arxiv--build-bibtex (metadata)
   "Create a BibTeX record for METADATA."
@@ -80,6 +80,10 @@ primaryClass = {%s}}"
         (cadr .name)
         (biblio-parenthesize (cadr .arxiv:affiliation))))))
 
+(defun biblio-arxiv--extract-id (id)
+  "Extract identifier from ID, the URL of an arXiv abstract."
+  (replace-regexp-in-string "http://arxiv.org/abs/" "" id))
+
 (defun biblio-arxiv--extract-year (date)
   "Parse an arXiv DATE and extract the year."
   (nth 5 (decode-time (parse-iso8601-time-string date))))
@@ -87,16 +91,18 @@ primaryClass = {%s}}"
 (defun biblio-arxiv--extract-interesting-fields (entry)
   "Prepare an arXiv search result ENTRY for display."
   (let-alist entry
-    (list (cons 'doi (cadr .arxiv:doi))
-          (cons 'identifier (cadr .id))
-          (cons 'year (biblio-arxiv--extract-year (cadr .published)))
-          (cons 'title (cadr .title))
-          (cons 'authors (seq-map #'biblio-arxiv--format-author entry))
-          (cons 'container (cadr .arxiv:journal_ref))
-          (cons 'category (biblio-alist-get 'term (car .arxiv:primary_category)))
-          (cons 'references (list (cadr .arxiv:doi) (cadr .id)))
-          (cons 'type "eprint")
-          (cons 'url (biblio-alist-get 'href (car .link))))))
+    (let ((id (biblio-arxiv--extract-id (cadr .id))))
+      (list (cons 'doi (cadr .arxiv:doi))
+            (cons 'identifier id)
+            (cons 'year (biblio-arxiv--extract-year (cadr .published)))
+            (cons 'title (cadr .title))
+            (cons 'authors (seq-map #'biblio-arxiv--format-author entry))
+            (cons 'container (cadr .arxiv:journal_ref))
+            (cons 'category
+                  (biblio-alist-get 'term (car .arxiv:primary_category)))
+            (cons 'references (list (cadr .arxiv:doi) id))
+            (cons 'type "eprint")
+            (cons 'url (biblio-alist-get 'href (car .link)))))))
 
 (defun biblio-arxiv--entryp (entry)
   "Check if ENTRY is an arXiv entry."
