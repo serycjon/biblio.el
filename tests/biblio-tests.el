@@ -85,5 +85,17 @@ month={Apr}, pages={147–156}}")
         (expect (biblio-format-bibtex stallman-bibtex t)
                 :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean))))))
 
+(require 'biblio-arxiv)
+
+(describe "In the arXiv module"
+  (describe "`biblio-arxiv--extract-year'"
+    (it "parses corrects dates"
+      (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39")
+              :to-equal "2003")
+      (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39-04:00")
+              :to-equal "2003")
+      (expect (biblio-arxiv--extract-year "1995-06-02T01:02:52+02:00")
+              :to-equal "1995"))))
+
 (provide 'biblio-tests)
 ;;; biblio-tests.el ends here

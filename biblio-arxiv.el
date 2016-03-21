@@ -85,9 +85,11 @@ primaryClass = {%s}}"
   (replace-regexp-in-string "http://arxiv.org/abs/" "" id))
 
 (defconst biblio-arxiv--iso-8601-regexp
-  (concat "\\([0-9][0-9][0-9][0-9]\\)-\\([0-9][0-9]\\)-\\([0-9][0-9]\\)" "T"
+  (concat "\\`"
+          "\\([0-9][0-9][0-9][0-9]\\)-\\([0-9][0-9]\\)-\\([0-9][0-9]\\)" "T"
           "\\([0-9][0-9]\\):\\([0-9][0-9]\\):\\([0-9][0-9]\\)"
-          "\\(?:" "-" "\\([0-9][0-9]\\):\\([0-9][0-9]\\)" "\\)?"))
+          "\\(?:" "[-+]" "\\([0-9][0-9]\\):\\([0-9][0-9]\\)" "\\)?"
+          "\\'"))
 
 (defun biblio-arxiv--extract-year (date)
   "Parse an arXiv DATE and extract the year."
