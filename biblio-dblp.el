@@ -35,7 +35,7 @@
 
 (defun biblio-dblp--forward-bibtex (metadata forward-to)
   "Forward BibTeX for DBLP entry METADATA to FORWARD-TO."
-  (let* ((source-url (alist-get 'url metadata))
+  (let* ((source-url (biblio-alist-get 'url metadata))
          (url (replace-regexp-in-string "/rec/" "/rec/bib2/" source-url t t)))
     (biblio-url-retrieve url (biblio-generic-url-callback
                               (lambda (_buffer-or-errors)

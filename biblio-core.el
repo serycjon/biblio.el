@@ -95,10 +95,10 @@ AUTOKEY: see `biblio-format-bibtex'."
         (bibtex-align-at-equal-sign t)
         (bibtex-autokey-edit-before-use nil)
         (bibtex-autokey-year-title-separator ":"))
-    (condition-case-unless-debug _err
+    (condition-case-unless-debug nil
         (bibtex-clean-entry autokey)
       ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
-      (error))))
+      (error nil))))
 
 (defun biblio-format-bibtex (bibtex &optional autokey)
   "Format BIBTEX entry.
@@ -529,7 +529,7 @@ NEWLINE is non-nil, add a newline before the main text."
   "Open web browser on page pointed to by BUTTON."
   (browse-url (button-label button)))
 
-(defun biblio--make-text-button (url)
+(defun biblio-make-url-button (url)
   "Make a text button pointing to URL."
   (with-temp-buffer
     (insert-text-button url
@@ -556,7 +556,7 @@ space after the record."
         (biblio--insert-detail "  Publisher: " .publisher t)
         (biblio--insert-detail "  References: " .references t)
         (biblio--insert-detail "  Open Access: " .open-access-status t)
-        (biblio--insert-detail "  URL: " (biblio--make-text-button .url) t))
+        (biblio--insert-detail "  URL: " (biblio-make-url-button .url) t))
       (unless no-sep
         (insert "\n\n")))))
 
