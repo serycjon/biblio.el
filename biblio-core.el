@@ -546,5 +546,14 @@ the docstring of `biblio-backends'."
                     (let* ((prompt (funcall backend 'prompt)))
                       (read-string prompt nil 'biblio--search-history))))
 
+(defun biblio-kill-buffers ()
+  "Kill all `biblio-selection-mode' buffers."
+  (interactive)
+  (dolist (buf (buffer-list))
+    (when (and (buffer-live-p buf)
+               (eq (buffer-local-value 'major-mode buf)
+                   'biblio-selection-mode))
+      (kill-buffer buf))))
+
 (provide 'biblio-core)
 ;;; biblio-core.el ends here
