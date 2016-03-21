@@ -56,7 +56,7 @@ archivePrefix = {arXiv},
 eprint = {%s},
 primaryClass = {%s}}"
             biblio-arxiv-bibtex-header
-            (apply #'biblio-join " AND " .authors)
+            (biblio-join-1 " AND " .authors)
             .title .year .identifier .category)))
 
 (defun biblio-arxiv--build-bibtex (metadata)

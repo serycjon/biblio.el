@@ -199,11 +199,16 @@ URL and CALLBACK; see `url-queue-retrieve'"
   "Remove empty sequences from STRS."
   (seq-remove #'seq-empty-p strs))
 
-(defun biblio-join (sep &rest strs)
+(defun biblio-join-1 (sep strs)
   "Join non-empty elements of STRS with SEP."
   (declare (indent 1))
   (let ((strs (biblio-remove-empty strs)))
     (biblio-string-join strs sep)))
+
+(defun biblio-join (sep &rest strs)
+  "Join non-empty elements of STRS with SEP."
+  (declare (indent 1))
+  (biblio-join-1 sep strs))
 
 (defmacro biblio--with-text-property (prop value &rest body)
   "Set PROP to VALUE on text inserted by BODY."
@@ -507,7 +512,7 @@ white space to align with the end of PREFIX."
 If ITEMS is a list or vector, join its entries with “, ”.  If
 NEWLINE is non-nil, add a newline before the main text."
   (when (or (vectorp items) (listp items))
-    (setq items (apply #'biblio-join ", " items)))
+    (setq items (biblio-join-1 ", " items)))
   (unless (seq-empty-p items)
     (when newline (insert "\n"))
     (let ((fontified (propertize prefix 'face 'biblio-detail-header-face)))
