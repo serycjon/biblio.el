@@ -146,7 +146,7 @@ month={Apr}, pages={147–156}}")
         (with-current-buffer (setq temp-buf (get-buffer-create " *temp*"))
           (shut-up
             (biblio-selection-mode)
-            (setq doc-buf (biblio--help-with-major-mode)))))
+            (setq doc-buf (biblio--selection-help)))))
       (after-each
         (kill-buffer doc-buf)
         (kill-buffer temp-buf))

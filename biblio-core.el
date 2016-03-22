@@ -288,7 +288,7 @@ That is, if two key map to `eq' values, they are grouped."
     (string-match "\\(.*\\)$" docs)
     (match-string-no-properties 1 docs)))
 
-(defun biblio--selection-help-1 (keyseqs-command)
+(defun biblio--help-with-major-mode-1 (keyseqs-command)
   "Print help on KEYSEQS-COMMAND to standard output."
   ;; (biblio-with-fontification 'font-lock-function-name-face
   (insert (format "%s (%S)\n"
@@ -307,7 +307,7 @@ That is, if two key map to `eq' values, they are grouped."
                         (biblio--flatten-map
                          (current-local-map))))))
         (with-current-buffer buf
-          (seq-do #'biblio--selection-help-1 bindings))))
+          (seq-do #'biblio--help-with-major-mode-1 bindings))))
     buf))
 
 ;;; Interaction
