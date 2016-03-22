@@ -57,20 +57,23 @@ month={Apr}, pages={147–156}}")
   publisher    = {Association for Computing Machinery (ACM)}
 }")
 
+(defun biblio--dummy-backend (&rest args)
+  "Dummy backend to work around https://github.com/jorgenschaefer/emacs-buttercup/issues/52.")
+
 (defconst sample-items
-  '(((backend . biblio-dblp-backend)
+  '(((backend . biblio--dummy-backend)
      (title . "Who builds a house without drawing blueprints?")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
      (url . "http://dblp.org/rec/journals/cacm/Lamport15"))
-    ((backend . biblio-dblp-backend)
+    ((backend . biblio--dummy-backend)
      (title . "Turing lecture: The computer science of concurrency: the early years.")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
      (url . "http://dblp.org/rec/journals/cacm/Lamport15a"))
-    ((backend . biblio-dblp-backend)
+    ((backend . biblio--dummy-backend)
      (title . "An incomplete history of concurrency chapter 1. 1965-1977.")
      (authors "Leslie Lamport") (container . "PODC") (type . "Conference and Workshop Papers")
      (url . "http://dblp.org/rec/conf/podc/Lamport13"))
-    ((backend . biblio-dblp-backend)
+    ((backend . biblio--dummy-backend)
      (title . "Euclid Writes an Algorithm: A Fairytale.")
      (authors "Leslie Lamport") (container . "Int. J. Software and Informatics") (type . "Journal Articles")
      (url . "http://dblp.org/rec/journals/ijsi/Lamport11"))
@@ -85,11 +88,11 @@ month={Apr}, pages={147–156}}")
      (container . ["Lecture Notes in Computer Science" "Distributed Computing"])
      (references "10.1007/978-3-642-24100-0_10")
      (type . "book-chapter") (url . "http://dx.doi.org/10.1007/978-3-642-24100-0_10"))
-    ((backend . biblio-dblp-backend)
+    ((backend . biblio--dummy-backend)
      (title . "Implementing dataflow with threads.")
      (authors "Leslie Lamport") (container . "Distributed Computing") (type . "Journal Articles")
      (url . nil) (doi . "10.1007/s00446-008-0065-1"))
-    ((backend . biblio-dblp-backend)
+    ((backend . biblio--dummy-backend)
      (title . "The PlusCal Algorithm Language.")
      (authors "Leslie Lamport") (container . "ICTAC") (type . "Conference and Workshop Papers")
      (url . nil) (doi . nil))))
@@ -185,6 +188,7 @@ month={Apr}, pages={147–156}}")
       (before-each
         (shut-up
           (with-current-buffer (setq source-buffer (get-buffer-create " *selection*"))
+            ;; This should be in an after-each, but they are broken at the moment
             (erase-buffer))
           (setq selection-buffer (biblio-insert-results source-buffer "B" sample-items))))
       (describe "a motion command"
@@ -247,7 +251,7 @@ month={Apr}, pages={147–156}}")
             (expect 'browse-url :to-have-been-called))))
       (describe "a selection command"
         (let ((bibtex "@article{empty}"))
-          (spy-on #'biblio-dblp-backend
+          (spy-on #'biblio--dummy-backend
                   :and-call-fake
                   (lambda (_command _metadata forward-to)
                     (funcall forward-to bibtex)))
@@ -255,37 +259,40 @@ month={Apr}, pages={147–156}}")
             (with-current-buffer selection-buffer
               (shut-up (biblio--selection-copy))
               (expect (car kill-ring) :to-equal bibtex)
-              (expect #'biblio-dblp-backend :to-have-been-called)))
+              (expect #'biblio--dummy-backend :to-have-been-called)))
           (it "can copy bibtex records and quit"
             (with-current-buffer selection-buffer
               (shut-up (biblio--selection-copy-quit))
               (expect (car kill-ring) :to-equal bibtex)
-              (expect #'biblio-dblp-backend :to-have-been-called)))
+              (expect #'biblio--dummy-backend :to-have-been-called)))
           (it "can insert bibtex records"
             (with-current-buffer selection-buffer
               (shut-up (biblio--selection-insert))
               (with-current-buffer source-buffer
                 (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
-              (expect #'biblio-dblp-backend :to-have-been-called)))
+              (expect #'biblio--dummy-backend :to-have-been-called)))
           (it "can insert bibtex records and quit"
             (with-current-buffer selection-buffer
               (shut-up (biblio--selection-insert-quit))
               (with-current-buffer source-buffer
                 (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
-              (expect #'biblio-dblp-backend :to-have-been-called)))
+              (expect #'biblio--dummy-backend :to-have-been-called)))
           (it "complains about empty entries"
             (with-temp-buffer
               (expect #'biblio--selection-copy :to-throw 'error)))))
       (describe "--selection-extended-action"
+        (spy-on 'biblio-completing-read-alist
+                :and-return-value #'biblio-dissemin--lookup-record)
         (it "runs an action as expected"
-          (spy-on 'biblio-completing-read-alist
-                  :and-return-value #'biblio-dissemin--lookup-record)
           (spy-on #'biblio-dissemin--lookup-record)
           (with-current-buffer selection-buffer
             (call-interactively #'biblio--selection-extended-action)
             (expect #'biblio-dissemin--lookup-record
                     :to-have-been-called-with
-                    (biblio--selection-metadata-at-point)))))
+                    (biblio--selection-metadata-at-point))))
+        (it "complains about missing entries"
+          (with-temp-buffer
+            (expect #'biblio--selection-extended-action :to-throw 'error))))
       (dolist (func '(biblio-completing-read biblio-completing-read-alist))
         (describe (format "%S" func)
           (spy-on #'completing-read)
@@ -298,7 +305,18 @@ month={Apr}, pages={147–156}}")
             (let ((completing-read-function #'ignore))
               (funcall func "A" nil)
               (expect #'completing-read :to-have-been-called)
-              (expect (biblio--completing-read-function) :to-be #'ignore)))))))
+              (expect (biblio--completing-read-function) :to-be #'ignore)))))
+      (describe "--select-backend"
+        (it "offers all backends"
+          (spy-on #'biblio-completing-read-alist)
+          (biblio--select-backend)
+          (expect #'biblio-completing-read-alist
+                  :to-have-been-called-with
+                  "Backend: "
+                  '(("arXiv" . biblio-arxiv-backend)
+                    ("CrossRef" . biblio-crossref-backend)
+                    ("DBLP" . biblio-dblp-backend))
+                  nil t)))))
 
   (describe "In the arXiv module"
     (describe "biblio-arxiv--extract-year"
