@@ -532,11 +532,12 @@ NEWLINE is non-nil, add a newline before the main text."
 
 (defun biblio-make-url-button (url)
   "Make a text button pointing to URL."
-  (with-temp-buffer
-    (insert-text-button url
-                        'follow-link t
-                        'action #'biblio--browse-url)
-    (buffer-string)))
+  (unless (seq-empty-p url)
+    (with-temp-buffer
+      (insert-text-button url
+                          'follow-link t
+                          'action #'biblio--browse-url)
+      (buffer-string))))
 
 (defun biblio-insert-result (item &optional no-sep)
   "Print a (prepared) bibliographic search result ITEM.
