@@ -143,7 +143,7 @@ cons '(error . non-ignored-error) instead."
           (throw 'return `(error . ,err)))))
       errors)))
 
-(defun biblio-generic-url-callback (callback &optional cleanup-function allowed-errors)
+(defun biblio-generic-url-callback (callback &optional cleanup-function &rest allowed-errors)
   "Make an `url'-ready callback from CALLBACK.
 CALLBACK is called with no arguments; the buffer containing the
 server's response is current at the time of the call, and killed
@@ -157,7 +157,7 @@ request returns another error, an exception is raised."
       (unwind-protect
           (progn
             (funcall (or cleanup-function #'ignore))
-            (-if-let* ((errors (biblio-check-for-retrieval-error events allowed-errors)))
+            (-if-let* ((errors (apply #'biblio-check-for-retrieval-error events allowed-errors)))
                 (if (eq 'error (car errors))
                     (message "Error while processing request: %S" (cdr errors))
                   (funcall callback errors))

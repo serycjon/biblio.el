@@ -149,6 +149,53 @@ month={Apr}, pages={147–156}}")
                     :to-equal `(error . (http . 406)))
             (expect (biblio-check-for-retrieval-error `(:error ,timeout-error :error ,http-error))
                     :to-equal `(error . timeout)))))
+      (describe "-generic-url-callback"
+        :var (source-buffer)
+        (defun biblio--dummy-cleanup-func ())
+        (defun biblio--dummy-callback (&optional arg) arg)
+        (spy-on #'biblio--dummy-callback :and-call-through)
+        (before-each
+          (with-current-buffer (setq source-buffer (get-buffer-create " *url*"))
+            (erase-buffer) ;; FIXME use an after-each form instead
+            (insert "Some\npretty\nheaders\n\nAnd a response.")))
+        (it "calls the cleanup function"
+          (spy-on #'biblio--dummy-cleanup-func)
+          (with-current-buffer source-buffer
+            (funcall (biblio-generic-url-callback
+                      #'ignore #'biblio--dummy-cleanup-func)
+                     nil))
+          (expect #'biblio--dummy-cleanup-func :to-have-been-called))
+        (it "invokes its callback in the right buffer"
+          (with-current-buffer source-buffer
+            (expect (funcall (biblio-generic-url-callback
+                              (lambda () (current-buffer)))
+                             nil)
+                    :to-equal source-buffer)))
+        (it "puts the point in the right spot"
+          (with-current-buffer source-buffer
+            (expect (funcall (biblio-generic-url-callback
+                              (lambda () (looking-at-p "And a response.")))
+                             nil)
+                    :to-be-truthy)))
+        (it "Always kills the source buffer"
+          (with-current-buffer source-buffer
+            (funcall (biblio-generic-url-callback #'ignore) nil))
+          (expect (buffer-live-p source-buffer) :not :to-be-truthy))
+        (let ((errors '(:error (error http 406))))
+          (it "stops when passed unexpected errors"
+            (expect (shut-up
+                      (funcall (biblio-generic-url-callback
+                                #'biblio--dummy-callback)
+                               errors)
+                      (shut-up-current-output))
+                    :to-match "Error")
+            (expect #'biblio--dummy-callback :not :to-have-been-called))
+          (it "forwards expected errors"
+            (expect (funcall (biblio-generic-url-callback
+                              #'biblio--dummy-callback #'ignore '(http . 406))
+                             errors)
+                    :to-equal '((http . 406)))
+            (expect #'biblio--dummy-callback :to-have-been-called))))
       (describe "-cleanup-doi"
         (it "Handles prefixes properly"
           (expect (biblio-cleanup-doi "http://dx.doi.org/10.5281/zenodo.44331")
@@ -322,7 +369,9 @@ month={Apr}, pages={147–156}}")
                   '(("arXiv" . biblio-arxiv-backend)
                     ("CrossRef" . biblio-crossref-backend)
                     ("DBLP" . biblio-dblp-backend))
-                  nil t)))))
+                  nil t)))
+      ;; (describe )
+      ))
 
   (describe "In the arXiv module"
     (describe "biblio-arxiv--extract-year"
