@@ -160,11 +160,11 @@ month={Apr}, pages={147–156}}")
                   :to-be-truthy))))
     (describe "in the interaction section,"
       :var (source-buffer selection-buffer)
-      (before-all
+      (before-each
         (shut-up
           (setq source-buffer (get-buffer-create " *selection*"))
           (setq selection-buffer (biblio-insert-results source-buffer "B" sample-items))))
-      (after-all
+      (after-each
         (kill-buffer source-buffer)
         (kill-buffer selection-buffer))
       (describe "a motion command"
@@ -195,6 +195,42 @@ month={Apr}, pages={147–156}}")
               (biblio--selection-previous))
             (expect (point) :to-equal 3)
             (expect (point) :to-equal (biblio--selection-previous)))))
+      (describe "a browsing command"
+        (spy-on #'browse-url)
+        (it "opens the right URL"
+          (with-current-buffer selection-buffer
+            (biblio--selection-browse)
+            (expect 'browse-url
+                    :to-have-been-called-with
+                    "http://dblp.org/rec/journals/cacm/Lamport15"))))
+      (describe "a selection command"
+        (let ((bibtex "@article{empty}"))
+          (spy-on #'biblio-dblp-backend
+                  :and-call-fake
+                  (lambda (command metadata forward-to)
+                    (funcall forward-to bibtex)))
+          (it "can copy bibtex records"
+            (with-current-buffer selection-buffer
+              (shut-up (biblio--selection-copy))
+              (expect (car kill-ring) :to-equal bibtex)
+              (expect #'biblio-dblp-backend :to-have-been-called)))
+          (it "can copy bibtex records and quit"
+            (with-current-buffer selection-buffer
+              (shut-up (biblio--selection-copy-quit))
+              (expect (car kill-ring) :to-equal bibtex)
+              (expect #'biblio-dblp-backend :to-have-been-called)))
+          (it "can insert bibtex records"
+            (with-current-buffer selection-buffer
+              (shut-up (biblio--selection-insert))
+              (with-current-buffer source-buffer
+                (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
+              (expect #'biblio-dblp-backend :to-have-been-called)))
+          (it "can insert bibtex records and quit"
+            (with-current-buffer selection-buffer
+              (shut-up (biblio--selection-insert-quit))
+              (with-current-buffer source-buffer
+                (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
+              (expect #'biblio-dblp-backend :to-have-been-called)))))
       (describe "-get-url"
         (it "works on each item"
           (with-current-buffer selection-buffer
