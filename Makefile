@@ -15,3 +15,6 @@ clean:
 
 test: depends elc clean # Must run clean to make tests work
 	$(CASK) exec buttercup -L . -L tests
+
+version:
+	$(CASK) exec $(EMACS) --version
