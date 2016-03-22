@@ -109,9 +109,9 @@ month={Apr}, pages={147–156}}")
             (expect (biblio--plist-to-alist plist) :to-equal alist)))))
     (describe "in the utilities section,"
       (describe "-format-bibtex"
-        (xit "does not throw on invalid entries"
+        (it "ignores invalid entries"
           (expect (biblio-format-bibtex "@!!") :to-equal "@!!")
-          (expect (biblio-format-bibtex "@article{KEY,}") :to-equal "@article{}"))
+          (expect (biblio-format-bibtex "@article{INVALID KEY,}") :to-equal "@article{INVALID KEY,}"))
         (it "formats a typical example properly"
           (expect (biblio-format-bibtex (concat "@ARTIcle{" stallman-bibtex))
                   :to-equal (concat "@Article{Stallman_1981," stallman-bibtex-clean)))

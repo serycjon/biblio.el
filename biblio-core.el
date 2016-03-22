@@ -93,10 +93,8 @@ AUTOKEY: see `biblio-format-bibtex'."
         (bibtex-align-at-equal-sign t)
         (bibtex-autokey-edit-before-use nil)
         (bibtex-autokey-year-title-separator ":"))
-    (condition-case-unless-debug nil
-        (bibtex-clean-entry autokey)
-      ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
-      (error nil))))
+    (ignore-errors ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
+      (bibtex-clean-entry autokey))))
 
 (defun biblio-format-bibtex (bibtex &optional autokey)
   "Format BIBTEX entry.
