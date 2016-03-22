@@ -135,8 +135,8 @@ WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
 
 (defun biblio-check-for-retrieval-error (events &rest allowed-errors)
   "Return list of errors in EVENTS.
-If any of these errors is no in ALLOWED-ERRORS, return a
-cons '(error . details) instead."
+If any of these errors is not in ALLOWED-ERRORS, return a
+cons '(error . non-ignored-error) instead."
   (let ((errors (delq nil (mapcar #'biblio--event-error-code (biblio--plist-to-alist events)))))
     (catch 'return
       (dolist (err errors)
@@ -307,7 +307,8 @@ That is, if two key map to `eq' values, they are grouped."
                         (biblio--flatten-map
                          (current-local-map))))))
         (with-current-buffer buf
-          (seq-do #'biblio--selection-help-1 bindings))))))
+          (seq-do #'biblio--selection-help-1 bindings))))
+    buf))
 
 ;;; Interaction
 

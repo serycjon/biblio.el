@@ -29,7 +29,7 @@
 (when (require 'undercover nil t)
   (undercover "*.el"))
 
-(require 'biblio-core)
+(require 'biblio)
 (require 'buttercup)
 
 (defconst stallman-bibtex "@ARTIcle{Stallman_1981, title={EMACS the extensible,
@@ -57,45 +57,102 @@ month={Apr}, pages={147–156}}")
   publisher    = {Association for Computing Machinery (ACM)}
 }")
 
-(describe "In biblio's core"
-  (describe "in the compatibility section"
-    (let ((alist '((a . 1) (b . 2) (c . 3) (c . 4)))
-          (plist '(a  1 b 2 c 3 c 4)))
-      (describe "`biblio-alist-get'"
-        (it "can read values from alists"
-          (expect (biblio-alist-get 'a alist) :to-equal 1)
-          (expect (biblio-alist-get 'b alist) :to-equal 2)
-          (expect (biblio-alist-get 'c alist) :to-equal 3)))
-      (describe "`biblio-plist-to-alist'"
-        (it "can convert plists"
-          (expect (biblio--plist-to-alist plist) :to-equal alist))))
-    (describe "`biblio-join'"
-      (it "removes empty entries before joining"
-        (expect (biblio-join ", " "a" nil "b" nil "c" '[]) :to-equal "a, b, c")
-        (expect (biblio-join-1 ", " '("a" nil "b" nil "c" [])) :to-equal "a, b, c"))))
-  (describe "in the utilities section"
-    (describe "`biblio-format-bibtex'"
-      (xit "does not throw on invalid entries"
-        (expect (biblio-format-bibtex "@!!") :to-equal "@!!")
-        (expect (biblio-format-bibtex "@article{KEY,}") :to-equal "@article{}"))
-      (it "formats a typical example properly"
-        (expect (biblio-format-bibtex stallman-bibtex)
-                :to-equal (concat "@Article{Stallman_1981," stallman-bibtex-clean)))
-      (it "properly creates missing keys"
-        (expect (biblio-format-bibtex stallman-bibtex t)
-                :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean))))))
+(describe "Unit tests:"
+  (describe "In biblio's core,"
+    (describe "in the compatibility section,"
+      (let ((alist '((a . 1) (b . 2) (c . 3) (c . 4)))
+            (plist '(a  1 b 2 c 3 c 4)))
+        (describe "`biblio-alist-get'"
+          (it "can read values from alists"
+            (expect (biblio-alist-get 'a alist) :to-equal 1)
+            (expect (biblio-alist-get 'b alist) :to-equal 2)
+            (expect (biblio-alist-get 'c alist) :to-equal 3)))
+        (describe "`biblio-plist-to-alist'"
+          (it "can convert plists"
+            (expect (biblio--plist-to-alist plist) :to-equal alist)))))
+    (describe "in the utilities section,"
+      (describe "`biblio-format-bibtex'"
+        (xit "does not throw on invalid entries"
+          (expect (biblio-format-bibtex "@!!") :to-equal "@!!")
+          (expect (biblio-format-bibtex "@article{KEY,}") :to-equal "@article{}"))
+        (it "formats a typical example properly"
+          (expect (biblio-format-bibtex stallman-bibtex)
+                  :to-equal (concat "@Article{Stallman_1981," stallman-bibtex-clean)))
+        (it "properly creates missing keys"
+          (expect (biblio-format-bibtex stallman-bibtex t)
+                  :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean))))
+      (describe "`biblio-response-as-utf8'"
+        (it "decodes Unicode characters properly"
+          (let ((unicode-str "É Ç € ← 有"))
+            (with-temp-buffer
+              (insert unicode-str)
+              (goto-char (point-min))
+              (set-buffer-multibyte nil)
+              (expect (biblio-response-as-utf-8) :to-equal unicode-str)))))
+      (describe "`biblio-check-for-retrieval-error'"
+        (let ((http-error '(error http 406))
+              (timeout-error '(error url-queue-timeout "Queue timeout exceeded")))
+          (it "supports empty lists"
+            (expect (biblio-check-for-retrieval-error nil) :to-equal nil))
+          (it "supports whitelists"
+            (expect (biblio-check-for-retrieval-error `(:error ,http-error) '(http . 406))
+                    :to-equal `((http . 406))))
+          (it "handles timeouts specially"
+            (let ((timeout-error-plist `(:error ,timeout-error)))
+              (expect (biblio-check-for-retrieval-error timeout-error-plist)
+                      :to-equal '(error . timeout))))
+          (it "returns the first error"
+            (expect (biblio-check-for-retrieval-error `(:error ,http-error :error ,timeout-error))
+                    :to-equal `(error . (http . 406)))
+            (expect (biblio-check-for-retrieval-error `(:error ,timeout-error :error ,http-error))
+                    :to-equal `(error . timeout)))))
+      (describe "`biblio-cleanup-doi'"
+        (it "Handles prefixes properly"
+          (expect (biblio-cleanup-doi "http://dx.doi.org/10.5281/zenodo.44331")
+                  :to-equal "10.5281/zenodo.44331")
+          (expect (biblio-cleanup-doi "http://doi.org/10.5281/zenodo.44331")
+                  :to-equal "10.5281/zenodo.44331"))
+        (it "trims spaces"
+          (expect (biblio-cleanup-doi "   10.5281/zenodo.44331 \n\t\r ")
+                  :to-equal "10.5281/zenodo.44331"))
+        (it "doesn't change clean DOIs"
+          (expect (biblio-cleanup-doi "10.5281/zenodo.44331")
+                  :to-equal "10.5281/zenodo.44331")))
+      (describe "`biblio-join'"
+        (it "removes empty entries before joining"
+          (expect (biblio-join ", " "a" nil "b" nil "c" '[]) :to-equal "a, b, c")
+          (expect (biblio-join-1 ", " '("a" nil "b" nil "c" [])) :to-equal "a, b, c"))))
+    (describe "in the major mode help section"
+      :var (temp-buf doc-buf)
+      (before-each
+        (with-current-buffer (setq temp-buf (get-buffer-create " *temp*"))
+          (shut-up
+            (biblio-selection-mode)
+            (setq doc-buf (biblio--help-with-major-mode)))))
+      (after-each
+        (kill-buffer doc-buf)
+        (kill-buffer temp-buf))
+      (describe "`biblio--help-with-major-mode'"
+        (it "produces a live buffer"
+          (expect (buffer-live-p doc-buf) :to-be-truthy))
+        (it "shows bindings in order"
+          (expect (with-current-buffer doc-buf
+                    (and (search-forward "<up>" nil t)
+                         (search-forward "<down>" nil t)))
+                  :to-be-truthy)))))
 
-(require 'biblio-arxiv)
-
-(describe "In the arXiv module"
-  (describe "`biblio-arxiv--extract-year'"
-    (it "parses corrects dates"
-      (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39")
-              :to-equal "2003")
-      (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39-04:00")
-              :to-equal "2003")
-      (expect (biblio-arxiv--extract-year "1995-06-02T01:02:52+02:00")
-              :to-equal "1995"))))
+  (describe "In the arXiv module"
+    (describe "`biblio-arxiv--extract-year'"
+      (it "parses correct dates"
+        (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39")
+                :to-equal "2003")
+        (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39-04:00")
+                :to-equal "2003")
+        (expect (biblio-arxiv--extract-year "1995-06-02T01:02:52+02:00")
+                :to-equal "1995"))
+      (it "rejects invalid dates"
+        (expect (biblio-arxiv--extract-year "Mon Mar 21 19:24:32 EDT 2016")
+                :to-equal nil)))))
 
 (provide 'biblio-tests)
 ;;; biblio-tests.el ends here
