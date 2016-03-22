@@ -72,11 +72,11 @@ requests a generic format and crates the BibTeX on its own."
   (with-current-buffer buffer
     (insert bibtex "\n\n")))
 
-(defun biblio-doi--generic-url-callback-1 (buffer-or-errors forward-to)
+(defun biblio-doi--generic-url-callback-1 (errors forward-to)
   "Helper function for `biblio-doi--generic-url-callback'.
-BUFFER-OR-ERRORS, FORWARD-TO: see there."
+ERRORS, FORWARD-TO: see there."
   (funcall forward-to
-           (when (bufferp buffer-or-errors)
+           (unless errors
              (biblio-format-bibtex (biblio-response-as-utf-8)))))
 
 (defun biblio-doi--generic-url-callback (cleanup-fn forward-to)
@@ -86,9 +86,9 @@ or nil depending on whether an error occured.  If error 406
 occurs, forward nil; otherwise, signal the error.  This is
 essentially a thin wrapper around `biblio-generic-url-callback'."
   (biblio-generic-url-callback
-   (lambda (buffer-or-errors)
+   (lambda (&optional errors)
      "Handle response from BibTeX server."
-     (biblio-doi--generic-url-callback-1 buffer-or-errors forward-to))
+     (biblio-doi--generic-url-callback-1 errors forward-to))
    cleanup-fn '(http . 406)))
 
 (defun biblio-doi--crosscite-callback (forward-to)

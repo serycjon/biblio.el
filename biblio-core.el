@@ -145,13 +145,13 @@ cons '(error . non-ignored-error) instead."
 
 (defun biblio-generic-url-callback (callback &optional cleanup-function allowed-errors)
   "Make an `url'-ready callback from CALLBACK.
-CALLBACK is called wit one argument, a buffer containing the
-server's response (that buffer is current at the time of the
-call, and killed after the call returns).  Call CLEANUP-FUNCTION
-before checking for errors.  If the request returns one of the
-errors in ALLOWED-ERRORS, CALLBACK is called with the list of
-alowed errors that occured instead of a buffer.  If the request
-returns another error, an exception is raised."
+CALLBACK is called with no arguments; the buffer containing the
+server's response is current at the time of the call, and killed
+after the call returns.  Call CLEANUP-FUNCTION before checking
+for errors.  If the request returns one of the errors in
+ALLOWED-ERRORS, CALLBACK is instead called with one argument, the
+list of alowed errors that occured instead of a buffer.  If the
+request returns another error, an exception is raised."
   (lambda (events)
     (let ((source-buffer (current-buffer)))
       (unwind-protect
@@ -163,7 +163,7 @@ returns another error, an exception is raised."
                   (funcall callback errors))
               (biblio--beginning-of-response-body)
               (delete-region (point-min) (point))
-              (funcall callback (current-buffer))))
+              (funcall callback)))
         (kill-buffer source-buffer)))))
 
 (defun biblio-url-retrieve (url callback)
@@ -588,7 +588,7 @@ space after the record."
   "Generate a search results callback for SOURCE-BUFFER.
 Results are parsed with (BACKEND 'parse-buffer)."
   (biblio-generic-url-callback
-   (lambda (_buffer-or-errors)
+   (lambda () ;; no allowed errors, so no arguments
      "Parse results of bibliographic search."
      (->> (funcall backend 'parse-buffer)
           (biblio--tag-backend backend)

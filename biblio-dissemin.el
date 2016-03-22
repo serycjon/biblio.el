@@ -107,7 +107,7 @@
   "Create a DBLP url to look up DOI."
   (format "http://dissem.in/api/%s" (url-encode-url doi)))
 
-(defun biblio-dissemin--callback (_buffer-or-errors)
+(defun biblio-dissemin--callback () ;; no allowed errors, so no arguments
   "Parse results returned by Dissemin."
   (biblio-dissemin--print-results (biblio-dissemin--parse-buffer)))
 
