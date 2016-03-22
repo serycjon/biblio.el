@@ -129,19 +129,20 @@ WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
     (`(:error . (error ,source ,details))
      (cons source details))))
 
-(defun biblio-check-for-retrieval-error (events &rest allowed-errors)
-  "Return list of errors in EVENTS.
-If any of these errors is not in ALLOWED-ERRORS, return a
-cons '(error . non-ignored-error) instead."
-  (let ((errors (delq nil (mapcar #'biblio--event-error-code (biblio--plist-to-alist events)))))
-    (catch 'return
-      (dolist (err errors)
-        (cond
-         ((eq (car err) 'url-queue-timeout)
-          (throw 'return '(error . timeout)))
-         ((not (member err allowed-errors))
-          (throw 'return `(error . ,err)))))
-      errors)))
+(eval-and-compile
+  (define-error 'biblio--url-error "URL retrieval error."))
+
+(defun biblio--throw-on-unexpected-errors (errors allowed-errors)
+  "Throw an url-error for any error in ERRORS not in ALLOWED-ERRORS."
+  (dolist (err errors)
+    (cond ((eq (car err) 'url-queue-timeout)
+           (signal 'biblio--url-error 'timeout))
+          ((not (member err allowed-errors))
+           (signal 'biblio--url-error err)))))
+
+(defun biblio--extract-errors (events)
+  "Extract errors from EVENTS."
+  (delq nil (mapcar #'biblio--event-error-code (biblio--plist-to-alist events))))
 
 (defun biblio-generic-url-callback (callback &optional cleanup-function &rest allowed-errors)
   "Make an `url'-ready callback from CALLBACK.
@@ -157,13 +158,15 @@ request returns another error, an exception is raised."
       (unwind-protect
           (progn
             (funcall (or cleanup-function #'ignore))
-            (-if-let* ((errors (apply #'biblio-check-for-retrieval-error events allowed-errors)))
-                (if (eq 'error (car errors))
-                    (message "Error while processing request: %S" (cdr errors))
-                  (funcall callback errors))
-              (biblio--beginning-of-response-body)
-              (delete-region (point-min) (point))
-              (funcall callback)))
+            (condition-case err
+                (-if-let* ((errors (biblio--extract-errors events)))
+                    (progn
+                      (biblio--throw-on-unexpected-errors errors allowed-errors)
+                      (funcall callback errors))
+                  (biblio--beginning-of-response-body)
+                  (delete-region (point-min) (point))
+                  (funcall callback))
+              (error (message "Error while processing request: %S" err))))
         (kill-buffer source-buffer)))))
 
 (defun biblio-url-retrieve (url callback)

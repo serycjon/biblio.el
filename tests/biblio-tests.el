@@ -98,19 +98,25 @@ month={Apr}, pages={147–156}}")
      (url . nil) (doi . nil))))
 
 (describe "Unit tests:"
+
   (describe "In biblio's core,"
+
     (describe "in the compatibility section,"
       (let ((alist '((a . 1) (b . 2) (c . 3) (c . 4)))
             (plist '(a  1 b 2 c 3 c 4)))
+
         (describe "-alist-get"
           (it "can read values from alists"
             (expect (biblio-alist-get 'a alist) :to-equal 1)
             (expect (biblio-alist-get 'b alist) :to-equal 2)
             (expect (biblio-alist-get 'c alist) :to-equal 3)))
+
         (describe "-plist-to-alist"
           (it "can convert plists"
             (expect (biblio--plist-to-alist plist) :to-equal alist)))))
+
     (describe "in the utilities section,"
+
       (describe "-format-bibtex"
         (it "ignores invalid entries"
           (expect (biblio-format-bibtex "@!!") :to-equal "@!!")
@@ -124,6 +130,7 @@ month={Apr}, pages={147–156}}")
         (it "replaces the “@data{” header"
           (expect (biblio-format-bibtex (concat "@data{" stallman-bibtex))
                   :to-match "@misc{")))
+
       (describe "-response-as-utf8"
         (it "decodes Unicode characters properly"
           (let ((unicode-str "É Ç € ← 有"))
@@ -132,23 +139,34 @@ month={Apr}, pages={147–156}}")
               (goto-char (point-min))
               (set-buffer-multibyte nil)
               (expect (biblio-response-as-utf-8) :to-equal unicode-str)))))
-      (describe "-check-for-retrieval-error"
-        (let ((http-error '(error http 406))
-              (timeout-error '(error url-queue-timeout "Queue timeout exceeded")))
+
+      (let* ((http-error--plist '(error http 406))
+             (timeout-error--plist '(error url-queue-timeout "Queue timeout exceeded"))
+             (http-error--alist '(http . 406))
+             (timeout-error--alist '(url-queue-timeout . "Queue timeout exceeded")))
+
+        (describe "-extract-errors"
+          (it "extracts errors on a typical example"
+            (expect (biblio--extract-errors `(:error ,http-error--plist :error ,timeout-error--plist))
+                    :to-equal `(,http-error--alist ,timeout-error--alist))))
+
+        (describe "-throw-on-unexpected-errors"
           (it "supports empty lists"
-            (expect (biblio-check-for-retrieval-error nil) :to-equal nil))
+            (expect (apply-partially #'biblio--throw-on-unexpected-errors
+                                     nil nil)
+                    :not :to-throw))
           (it "supports whitelists"
-            (expect (biblio-check-for-retrieval-error `(:error ,http-error) '(http . 406))
-                    :to-equal `((http . 406))))
-          (it "handles timeouts specially"
-            (let ((timeout-error-plist `(:error ,timeout-error)))
-              (expect (biblio-check-for-retrieval-error timeout-error-plist)
-                      :to-equal '(error . timeout))))
+            (expect (apply-partially #'biblio--throw-on-unexpected-errors
+                                     `(,http-error--alist) `(,http-error--alist))
+                    :not :to-throw))
           (it "returns the first error"
-            (expect (biblio-check-for-retrieval-error `(:error ,http-error :error ,timeout-error))
-                    :to-equal `(error . (http . 406)))
-            (expect (biblio-check-for-retrieval-error `(:error ,timeout-error :error ,http-error))
-                    :to-equal `(error . timeout)))))
+            (expect (apply-partially #'biblio--throw-on-unexpected-errors
+                                     `(,http-error--alist ,timeout-error--alist) nil)
+                    :to-throw 'biblio--url-error '(http . 406))
+            (expect (apply-partially #'biblio--throw-on-unexpected-errors
+                                     `(,timeout-error--alist ,http-error--alist) nil)
+                    :to-throw 'biblio--url-error 'timeout))))
+
       (describe "-generic-url-callback"
         :var (source-buffer)
         (defun biblio--dummy-cleanup-func ())
@@ -177,25 +195,36 @@ month={Apr}, pages={147–156}}")
                               (lambda () (looking-at-p "And a response.")))
                              nil)
                     :to-be-truthy)))
-        (it "Always kills the source buffer"
+        (it "always kills the source buffer"
           (with-current-buffer source-buffer
             (funcall (biblio-generic-url-callback #'ignore) nil))
           (expect (buffer-live-p source-buffer) :not :to-be-truthy))
         (let ((errors '(:error (error http 406))))
           (it "stops when passed unexpected errors"
-            (expect (shut-up
-                      (funcall (biblio-generic-url-callback
-                                #'biblio--dummy-callback)
-                               errors)
-                      (shut-up-current-output))
-                    :to-match "Error")
+            (with-current-buffer source-buffer
+              (expect (shut-up
+                        (funcall (biblio-generic-url-callback
+                                  #'biblio--dummy-callback)
+                                 errors)
+                        (shut-up-current-output))
+                      :to-match "Error"))
+            (expect #'biblio--dummy-callback :not :to-have-been-called))
+          (it "swallows invalid response bodies"
+            (with-temp-buffer
+              (expect (lambda () (shut-up
+                              (funcall (biblio-generic-url-callback
+                                        #'biblio--dummy-callback #'ignore)
+                                       nil)))
+                      :not :to-throw))
             (expect #'biblio--dummy-callback :not :to-have-been-called))
           (it "forwards expected errors"
-            (expect (funcall (biblio-generic-url-callback
-                              #'biblio--dummy-callback #'ignore '(http . 406))
-                             errors)
-                    :to-equal '((http . 406)))
+            (with-current-buffer source-buffer
+              (expect (funcall (biblio-generic-url-callback
+                                #'biblio--dummy-callback #'ignore '(http . 406))
+                               errors)
+                      :to-equal '((http . 406))))
             (expect #'biblio--dummy-callback :to-have-been-called))))
+
       (describe "-cleanup-doi"
         (it "Handles prefixes properly"
           (expect (biblio-cleanup-doi "http://dx.doi.org/10.5281/zenodo.44331")
@@ -208,10 +237,12 @@ month={Apr}, pages={147–156}}")
         (it "doesn't change clean DOIs"
           (expect (biblio-cleanup-doi "10.5281/zenodo.44331")
                   :to-equal "10.5281/zenodo.44331")))
+
       (describe "-join"
         (it "removes empty entries before joining"
           (expect (biblio-join ", " "a" nil "b" nil "c" '[]) :to-equal "a, b, c")
           (expect (biblio-join-1 ", " '("a" nil "b" nil "c" [])) :to-equal "a, b, c"))))
+
     (describe "in the major mode help section"
       :var (temp-buf doc-buf)
       (before-each
@@ -222,6 +253,7 @@ month={Apr}, pages={147–156}}")
       (after-each
         (kill-buffer doc-buf)
         (kill-buffer temp-buf))
+
       (describe "--help-with-major-mode"
         (it "produces a live buffer"
           (expect (buffer-live-p doc-buf) :to-be-truthy))
@@ -230,6 +262,7 @@ month={Apr}, pages={147–156}}")
                     (and (search-forward "<up>" nil t)
                          (search-forward "<down>" nil t)))
                   :to-be-truthy))))
+
     (describe "in the interaction section,"
       :var (source-buffer selection-buffer)
       (before-each
@@ -239,6 +272,7 @@ month={Apr}, pages={147–156}}")
             ;; -kill-buffers), but after-each is broken at the moment
             (erase-buffer))
           (setq selection-buffer (biblio-insert-results source-buffer "B" sample-items))))
+
       (describe "a motion command"
         (it "can go down"
           (with-current-buffer selection-buffer
@@ -266,6 +300,7 @@ month={Apr}, pages={147–156}}")
               (biblio--selection-previous))
             (expect (point) :to-equal 3)
             (expect (point) :to-equal (biblio--selection-previous)))))
+
       (describe "-get-url"
         (it "works on each item"
           (with-current-buffer selection-buffer
@@ -280,6 +315,7 @@ month={Apr}, pages={147–156}}")
             (dotimes (_ 2) (biblio--selection-previous))
             (expect (biblio-get-url (biblio--selection-metadata-at-point))
                     :to-match "^https://doi.org/"))))
+
       (describe "a browsing command"
         (spy-on #'browse-url)
         (it "opens the right URL"
@@ -291,12 +327,14 @@ month={Apr}, pages={147–156}}")
         (it "complains about missing URLs"
           (with-current-buffer selection-buffer
             (goto-char (point-max))
-            (expect #'biblio--selection-browse :to-throw 'error)))
+            (expect #'biblio--selection-browse
+                    :to-throw 'error '("No URL for this entry"))))
         (it "lets users click buttons"
           (with-current-buffer selection-buffer
             (expect (search-forward "http" nil t) :to-be-truthy)
             (push-button (point))
             (expect 'browse-url :to-have-been-called))))
+
       (describe "a selection command"
         (let ((bibtex "@article{empty}"))
           (spy-on #'biblio--dummy-backend
@@ -327,7 +365,9 @@ month={Apr}, pages={147–156}}")
               (expect #'biblio--dummy-backend :to-have-been-called)))
           (it "complains about empty entries"
             (with-temp-buffer
-              (expect #'biblio--selection-copy :to-throw 'error)))))
+              (expect #'biblio--selection-copy
+                      :to-throw 'error '("No entry at point"))))))
+
       (describe "--selection-extended-action"
         (spy-on 'biblio-completing-read-alist
                 :and-return-value #'biblio-dissemin--lookup-record)
@@ -340,7 +380,10 @@ month={Apr}, pages={147–156}}")
                     (biblio--selection-metadata-at-point))))
         (it "complains about missing entries"
           (with-temp-buffer
-            (expect #'biblio--selection-extended-action :to-throw 'error))))
+            (expect (lambda ()
+                      (call-interactively #'biblio--selection-extended-action))
+                    :to-throw 'user-error))))
+
       (dolist (func '(biblio-completing-read biblio-completing-read-alist))
         (describe (format "%S" func)
           (spy-on #'completing-read)
@@ -354,11 +397,14 @@ month={Apr}, pages={147–156}}")
               (funcall func "A" nil)
               (expect #'completing-read :to-have-been-called)
               (expect (biblio--completing-read-function) :to-be #'ignore)))))
+
       (describe "-kill-buffers"
         (it "actually kills buffers"
           (biblio-kill-buffers)
           (expect (buffer-live-p selection-buffer) :not :to-be-truthy))))
+
     (describe "in the searching section,"
+
       (describe "--select-backend"
         (it "offers all backends"
           (spy-on #'biblio-completing-read-alist)
@@ -374,6 +420,7 @@ month={Apr}, pages={147–156}}")
       ))
 
   (describe "In the arXiv module"
+
     (describe "biblio-arxiv--extract-year"
       (it "parses correct dates"
         (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39")
