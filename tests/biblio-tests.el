@@ -57,21 +57,39 @@ month={Apr}, pages={147–156}}")
   publisher    = {Association for Computing Machinery (ACM)}
 }")
 
+(defconst sample-items
+  '(((backend . biblio-dblp-backend)
+     (title . "Who builds a house without drawing blueprints?")
+     (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
+     (url . "http://dblp.org/rec/journals/cacm/Lamport15"))
+    ((backend . biblio-dblp-backend)
+     (title . "Turing lecture: The computer science of concurrency: the early years.")
+     (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
+     (url . "http://dblp.org/rec/journals/cacm/Lamport15a"))
+    ((backend . biblio-dblp-backend)
+     (title . "An incomplete history of concurrency chapter 1. 1965-1977.")
+     (authors "Leslie Lamport") (container . "PODC") (type . "Conference and Workshop Papers")
+     (url . "http://dblp.org/rec/conf/podc/Lamport13"))
+    ((backend . biblio-dblp-backend)
+     (title . "Euclid Writes an Algorithm: A Fairytale.")
+     (authors "Leslie Lamport") (container . "Int. J. Software and Informatics") (type . "Journal Articles")
+     (url . "http://dblp.org/rec/journals/ijsi/Lamport11"))))
+
 (describe "Unit tests:"
   (describe "In biblio's core,"
     (describe "in the compatibility section,"
       (let ((alist '((a . 1) (b . 2) (c . 3) (c . 4)))
             (plist '(a  1 b 2 c 3 c 4)))
-        (describe "`biblio-alist-get'"
+        (describe "-alist-get"
           (it "can read values from alists"
             (expect (biblio-alist-get 'a alist) :to-equal 1)
             (expect (biblio-alist-get 'b alist) :to-equal 2)
             (expect (biblio-alist-get 'c alist) :to-equal 3)))
-        (describe "`biblio-plist-to-alist'"
+        (describe "-plist-to-alist"
           (it "can convert plists"
             (expect (biblio--plist-to-alist plist) :to-equal alist)))))
     (describe "in the utilities section,"
-      (describe "`biblio-format-bibtex'"
+      (describe "-format-bibtex"
         (xit "does not throw on invalid entries"
           (expect (biblio-format-bibtex "@!!") :to-equal "@!!")
           (expect (biblio-format-bibtex "@article{KEY,}") :to-equal "@article{}"))
@@ -81,7 +99,7 @@ month={Apr}, pages={147–156}}")
         (it "properly creates missing keys"
           (expect (biblio-format-bibtex stallman-bibtex t)
                   :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean))))
-      (describe "`biblio-response-as-utf8'"
+      (describe "-response-as-utf8"
         (it "decodes Unicode characters properly"
           (let ((unicode-str "É Ç € ← 有"))
             (with-temp-buffer
@@ -89,7 +107,7 @@ month={Apr}, pages={147–156}}")
               (goto-char (point-min))
               (set-buffer-multibyte nil)
               (expect (biblio-response-as-utf-8) :to-equal unicode-str)))))
-      (describe "`biblio-check-for-retrieval-error'"
+      (describe "-check-for-retrieval-error"
         (let ((http-error '(error http 406))
               (timeout-error '(error url-queue-timeout "Queue timeout exceeded")))
           (it "supports empty lists"
@@ -106,7 +124,7 @@ month={Apr}, pages={147–156}}")
                     :to-equal `(error . (http . 406)))
             (expect (biblio-check-for-retrieval-error `(:error ,timeout-error :error ,http-error))
                     :to-equal `(error . timeout)))))
-      (describe "`biblio-cleanup-doi'"
+      (describe "-cleanup-doi"
         (it "Handles prefixes properly"
           (expect (biblio-cleanup-doi "http://dx.doi.org/10.5281/zenodo.44331")
                   :to-equal "10.5281/zenodo.44331")
@@ -118,7 +136,7 @@ month={Apr}, pages={147–156}}")
         (it "doesn't change clean DOIs"
           (expect (biblio-cleanup-doi "10.5281/zenodo.44331")
                   :to-equal "10.5281/zenodo.44331")))
-      (describe "`biblio-join'"
+      (describe "-join"
         (it "removes empty entries before joining"
           (expect (biblio-join ", " "a" nil "b" nil "c" '[]) :to-equal "a, b, c")
           (expect (biblio-join-1 ", " '("a" nil "b" nil "c" [])) :to-equal "a, b, c"))))
@@ -132,17 +150,60 @@ month={Apr}, pages={147–156}}")
       (after-each
         (kill-buffer doc-buf)
         (kill-buffer temp-buf))
-      (describe "`biblio--help-with-major-mode'"
+      (describe "--help-with-major-mode"
         (it "produces a live buffer"
           (expect (buffer-live-p doc-buf) :to-be-truthy))
         (it "shows bindings in order"
           (expect (with-current-buffer doc-buf
                     (and (search-forward "<up>" nil t)
                          (search-forward "<down>" nil t)))
-                  :to-be-truthy)))))
+                  :to-be-truthy))))
+    (describe "in the interaction section,"
+      :var (source-buffer selection-buffer)
+      (before-all
+        (shut-up
+          (setq source-buffer (get-buffer-create " *selection*"))
+          (setq selection-buffer (biblio-insert-results source-buffer "B" sample-items))))
+      (after-all
+        (kill-buffer source-buffer)
+        (kill-buffer selection-buffer))
+      (describe "a motion command"
+        (it "can go down"
+          (with-current-buffer selection-buffer
+            (expect (point) :not :to-equal (biblio--selection-next))
+            (expect (point) :not :to-equal (biblio--selection-next))
+            (expect (biblio-alist-get 'title (biblio--selection-metadata-at-point))
+                    :to-match "^An incomplete history ")))
+        (it "cannot go beyond the end"
+          (with-current-buffer selection-buffer
+            (dotimes (_ 50)
+              (biblio--selection-next))
+            (expect (point) :to-equal (biblio--selection-next))))
+        (it "can go up"
+          (with-current-buffer selection-buffer
+            (goto-char (point-max))
+            (expect (point) :not :to-equal (biblio--selection-previous))
+            (expect (point) :not :to-equal (biblio--selection-previous))
+            (expect (point) :not :to-equal (biblio--selection-previous))
+            (expect (point) :not :to-equal (point-max))
+            (expect (biblio-alist-get 'title (biblio--selection-metadata-at-point))
+                    :to-match "^Turing lecture")))
+        (it "cannot go beyond the beginning"
+          (with-current-buffer selection-buffer
+            (goto-char (point-max))
+            (dotimes (_ 50)
+              (biblio--selection-previous))
+            (expect (point) :to-equal 3)
+            (expect (point) :to-equal (biblio--selection-previous)))))
+      (describe "-get-url"
+        (it "works on each item"
+          (with-current-buffer selection-buffer
+            (while (not (eq (point) (biblio--selection-next)))
+              (expect (biblio-get-url (biblio--selection-metadata-at-point))
+                      :to-match "^http://")))))))
 
   (describe "In the arXiv module"
-    (describe "`biblio-arxiv--extract-year'"
+    (describe "biblio-arxiv--extract-year"
       (it "parses correct dates"
         (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39")
                 :to-equal "2003")

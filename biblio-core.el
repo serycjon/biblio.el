@@ -317,11 +317,11 @@ That is, if two key map to `eq' values, they are grouped."
 
 (defun biblio--selection-move (move-fn search-fn)
   "Move using MOVE-FN, then call SEARCH-FN and go to first match."
-  (let ((target))
+  (let ((target (point)))
     (save-excursion
       (funcall move-fn)
-      (funcall search-fn biblio--search-result-marker-regexp nil t)
-      (setq target (match-end 0)))
+      (when (funcall search-fn biblio--search-result-marker-regexp nil t)
+        (setq target (match-end 0))))
     (goto-char target)))
 
 (defun biblio-get-url (metadata)
