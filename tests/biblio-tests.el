@@ -32,7 +32,7 @@
 (require 'biblio)
 (require 'buttercup)
 
-(defconst stallman-bibtex "@ARTIcle{Stallman_1981, title={EMACS the extensible,
+(defconst stallman-bibtex "Stallman_1981, title={EMACS the extensible,
 customizable self-documenting display editor}, volume={2},
 ISSN=\"0737-819X\",
 url={http://dx.doi.org/10.1145/1159890.806466},
@@ -74,6 +74,17 @@ month={Apr}, pages={147–156}}")
      (title . "Euclid Writes an Algorithm: A Fairytale.")
      (authors "Leslie Lamport") (container . "Int. J. Software and Informatics") (type . "Journal Articles")
      (url . "http://dblp.org/rec/journals/ijsi/Lamport11"))
+    ((backend . biblio-crossref-backend)
+     (title . "Fast Paxos") (authors "Leslie Lamport")
+     (publisher . "Springer Science + Business Media") (container . ["Distrib. Comput." "Distributed Computing"])
+     (references "10.1007/s00446-006-0005-x") (type . "journal-article")
+     (doi . "10.1007/s00446-006-0005-x") (url . "http://dx.doi.org/10.1007/s00446-006-0005-x"))
+    ((backend . biblio-crossref-backend)
+     (title . "Brief Announcement: Leaderless Byzantine Paxos") (authors "Leslie Lamport")
+     (publisher . "Springer Science + Business Media")
+     (container . ["Lecture Notes in Computer Science" "Distributed Computing"])
+     (references "10.1007/978-3-642-24100-0_10")
+     (type . "book-chapter") (url . "http://dx.doi.org/10.1007/978-3-642-24100-0_10"))
     ((backend . biblio-dblp-backend)
      (title . "Implementing dataflow with threads.")
      (authors "Leslie Lamport") (container . "Distributed Computing") (type . "Journal Articles")
@@ -102,11 +113,14 @@ month={Apr}, pages={147–156}}")
           (expect (biblio-format-bibtex "@!!") :to-equal "@!!")
           (expect (biblio-format-bibtex "@article{KEY,}") :to-equal "@article{}"))
         (it "formats a typical example properly"
-          (expect (biblio-format-bibtex stallman-bibtex)
+          (expect (biblio-format-bibtex (concat "@ARTIcle{" stallman-bibtex))
                   :to-equal (concat "@Article{Stallman_1981," stallman-bibtex-clean)))
-        (it "properly creates missing keys"
-          (expect (biblio-format-bibtex stallman-bibtex t)
-                  :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean))))
+        (it "properly creates keys"
+          (expect (biblio-format-bibtex (concat "@article{" stallman-bibtex) t)
+                  :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean)))
+        (it "replaces the “@data{” header"
+          (expect (biblio-format-bibtex (concat "@data{" stallman-bibtex))
+                  :to-match "@misc{")))
       (describe "-response-as-utf8"
         (it "decodes Unicode characters properly"
           (let ((unicode-str "É Ç € ← 有"))
@@ -169,10 +183,10 @@ month={Apr}, pages={147–156}}")
     (describe "in the interaction section,"
       :var (source-buffer selection-buffer)
       (before-each
-        (with-current-buffer (setq source-buffer (get-buffer-create " *selection*"))
-          (erase-buffer))
-        (setq selection-buffer (biblio-insert-results source-buffer "B" sample-items))
-        (message "Selection buffer is %S" selection-buffer))
+        (shut-up
+          (with-current-buffer (setq source-buffer (get-buffer-create " *selection*"))
+            (erase-buffer))
+          (setq selection-buffer (biblio-insert-results source-buffer "B" sample-items))))
       (describe "a motion command"
         (it "can go down"
           (with-current-buffer selection-buffer
@@ -188,9 +202,9 @@ month={Apr}, pages={147–156}}")
         (it "can go up"
           (with-current-buffer selection-buffer
             (goto-char (point-max))
-            (dotimes (_ 5)
-              (expect (point) :not :to-equal (biblio--selection-previous)))
-            (expect (point) :not :to-equal (point-max))
+            (dotimes (_ (1- (length sample-items)))
+              (expect (point) :not :to-equal (biblio--selection-previous))
+              (expect (point) :not :to-equal (point-max)))
             (expect (biblio-alist-get 'title (biblio--selection-metadata-at-point))
                     :to-match "^Turing lecture")))
         (it "cannot go beyond the beginning"
@@ -200,6 +214,20 @@ month={Apr}, pages={147–156}}")
               (biblio--selection-previous))
             (expect (point) :to-equal 3)
             (expect (point) :to-equal (biblio--selection-previous)))))
+      (describe "-get-url"
+        (it "works on each item"
+          (with-current-buffer selection-buffer
+            (dotimes (_ (1- (length sample-items)))
+              (expect (biblio-get-url (biblio--selection-metadata-at-point))
+                      :to-match "^https?://")
+              (expect (point) :not :to-equal (biblio--selection-next)))
+            (expect (point) :to-equal (biblio--selection-next))))
+        (it "uses DOIs if URLs are unavailable"
+          (with-current-buffer selection-buffer
+            (goto-char (point-max))
+            (dotimes (_ 2) (biblio--selection-previous))
+            (expect (biblio-get-url (biblio--selection-metadata-at-point))
+                    :to-match "^https://doi.org/"))))
       (describe "a browsing command"
         (spy-on #'browse-url)
         (it "opens the right URL"
@@ -211,7 +239,12 @@ month={Apr}, pages={147–156}}")
         (it "complains about missing URLs"
           (with-current-buffer selection-buffer
             (goto-char (point-max))
-            (expect #'biblio--selection-browse :to-throw 'error))))
+            (expect #'biblio--selection-browse :to-throw 'error)))
+        (it "lets users click buttons"
+          (with-current-buffer selection-buffer
+            (expect (search-forward "http" nil t) :to-be-truthy)
+            (push-button (point))
+            (expect 'browse-url :to-have-been-called))))
       (describe "a selection command"
         (let ((bibtex "@article{empty}"))
           (spy-on #'biblio-dblp-backend
@@ -239,19 +272,33 @@ month={Apr}, pages={147–156}}")
               (shut-up (biblio--selection-insert-quit))
               (with-current-buffer source-buffer
                 (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
-              (expect #'biblio-dblp-backend :to-have-been-called)))))
-      (describe "-get-url"
-        (xit "works on each item"
+              (expect #'biblio-dblp-backend :to-have-been-called)))
+          (it "complains about empty entries"
+            (with-temp-buffer
+              (expect #'biblio--selection-copy :to-throw 'error)))))
+      (describe "--selection-extended-action"
+        (it "runs an action as expected"
+          (spy-on 'biblio-completing-read-alist
+                  :and-return-value #'biblio-dissemin--lookup-record)
+          (spy-on #'biblio-dissemin--lookup-record)
           (with-current-buffer selection-buffer
-            (while (not (eq (point) (biblio--selection-next)))
-              (expect (biblio-get-url (biblio--selection-metadata-at-point))
-                      :to-match "^https?://"))))
-        (it "uses DOIs if URLs are unavailable"
-          (with-current-buffer selection-buffer
-            (goto-char (point-max))
-            (dotimes (_ 2) (biblio--selection-previous))
-            (expect (biblio-get-url (biblio--selection-metadata-at-point))
-                    :to-match "^https://doi.org/"))))))
+            (call-interactively #'biblio--selection-extended-action)
+            (expect #'biblio-dissemin--lookup-record
+                    :to-have-been-called-with
+                    (biblio--selection-metadata-at-point)))))
+      (dolist (func '(biblio-completing-read biblio-completing-read-alist))
+        (describe (format "%S" func)
+          (spy-on #'completing-read)
+          (it "uses ido by default"
+            (let ((completing-read-function #'completing-read-default))
+              (funcall func "A" nil)
+              (expect #'completing-read :to-have-been-called)
+              (expect (biblio--completing-read-function) :to-be #'ido-completing-read)))
+          (it "respects users choices"
+            (let ((completing-read-function #'ignore))
+              (funcall func "A" nil)
+              (expect #'completing-read :to-have-been-called)
+              (expect (biblio--completing-read-function) :to-be #'ignore)))))))
 
   (describe "In the arXiv module"
     (describe "biblio-arxiv--extract-year"

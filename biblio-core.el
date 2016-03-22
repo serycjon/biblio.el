@@ -61,12 +61,10 @@ This variable is local to each search results buffer.")
 
 ;;; Compatibility
 
-(defun biblio-alist-get (key alist &optional default)
-  "Copy of Emacs 25's `alist-get'.
-Get the value associated to KEY in ALIST.  DEFAULT is the value
-to return if KEY is not found in ALIST."
-  (let ((x (assq key alist)))
-    (if x (cdr x) default)))
+(defun biblio-alist-get (key alist)
+  "Copy of Emacs 25's `alist-get', minus default.
+Get the value associated to KEY in ALIST, or nil."
+  (cdr (assq key alist)))
 
 (defun biblio--plist-to-alist (plist)
   "Copy of Emacs 25's `json--plist-to-alist'.
@@ -409,14 +407,18 @@ If QUIT is set, also kill the results buffer."
 Each element should be in the for (LABEL . FUNCTION); FUNCTION
 will be called with the metadata of the current item.")
 
+(defun biblio--completing-read-function ()
+  "Return ido, unless user picked another completion package."
+  (if (eq completing-read-function #'completing-read-default)
+      #'ido-completing-read
+    completing-read-function))
+
 (defun biblio-completing-read (prompt collection &optional predicate require-match
                                 initial-input hist def inherit-input-method)
-  "Complete using ido, unless user picked another completion package.
+  "Complete using `biblio-completing-read-function'.
 PROMPT, COLLECTION, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
 HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
-  (let ((completing-read-function
-         (if (eq completing-read-function #'completing-read-default)
-             #'ido-completing-read completing-read-function)))
+  (let ((completing-read-function (biblio--completing-read-function)))
     (completing-read prompt collection predicate require-match
                      initial-input hist def inherit-input-method)))
 
@@ -432,7 +434,7 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
                  initial-input hist def inherit-input-method)
                 collection))))
 
-(defun biblio--read-selection-extensible-action ()
+(defun biblio--read-selection-extended-action ()
   "Read an action from `biblio-selection-mode-actions-alist'."
   (biblio-completing-read-alist
    "Action: " biblio-selection-mode-actions-alist nil t))
@@ -441,7 +443,7 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
   "Run an ACTION with metadata of current entry.
 Interactively, query for ACTION from
 `biblio-selection-mode-actions-alist'."
-  (interactive (list (biblio--read-selection-extensible-action)))
+  (interactive (list (biblio--read-selection-extended-action)))
   (-if-let* ((metadata (biblio--selection-metadata-at-point)))
       (funcall action metadata)
     (user-error "No entry at point")))
@@ -573,7 +575,7 @@ space after the record."
   (with-current-buffer (biblio--make-buffer source-buffer backend-name)
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (seq-do #'biblio-insert-result items)
+      (seq-do #'biblio-insert-result (print items))
       (goto-char (point-min))
       (biblio-selection-mode))
     (setq-local biblio--source-buffer source-buffer)
