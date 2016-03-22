@@ -188,7 +188,8 @@ month={Apr}, pages={147–156}}")
       (before-each
         (shut-up
           (with-current-buffer (setq source-buffer (get-buffer-create " *selection*"))
-            ;; This should be in an after-each, but they are broken at the moment
+            ;; This should be in an after-each (and it should include
+            ;; -kill-buffers), but after-each is broken at the moment
             (erase-buffer))
           (setq selection-buffer (biblio-insert-results source-buffer "B" sample-items))))
       (describe "a motion command"
@@ -306,6 +307,11 @@ month={Apr}, pages={147–156}}")
               (funcall func "A" nil)
               (expect #'completing-read :to-have-been-called)
               (expect (biblio--completing-read-function) :to-be #'ignore)))))
+      (describe "-kill-buffers"
+        (it "actually kills buffers"
+          (biblio-kill-buffers)
+          (expect (buffer-live-p selection-buffer) :not :to-be-truthy))))
+    (describe "in the searching section,"
       (describe "--select-backend"
         (it "offers all backends"
           (spy-on #'biblio-completing-read-alist)
