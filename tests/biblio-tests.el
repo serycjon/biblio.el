@@ -73,7 +73,15 @@ month={Apr}, pages={147–156}}")
     ((backend . biblio-dblp-backend)
      (title . "Euclid Writes an Algorithm: A Fairytale.")
      (authors "Leslie Lamport") (container . "Int. J. Software and Informatics") (type . "Journal Articles")
-     (url . "http://dblp.org/rec/journals/ijsi/Lamport11"))))
+     (url . "http://dblp.org/rec/journals/ijsi/Lamport11"))
+    ((backend . biblio-dblp-backend)
+     (title . "Implementing dataflow with threads.")
+     (authors "Leslie Lamport") (container . "Distributed Computing") (type . "Journal Articles")
+     (url . nil) (doi . "10.1007/s00446-008-0065-1"))
+    ((backend . biblio-dblp-backend)
+     (title . "The PlusCal Algorithm Language.")
+     (authors "Leslie Lamport") (container . "ICTAC") (type . "Conference and Workshop Papers")
+     (url . nil) (doi . nil))))
 
 (describe "Unit tests:"
   (describe "In biblio's core,"
@@ -185,6 +193,8 @@ month={Apr}, pages={147–156}}")
             (expect (point) :not :to-equal (biblio--selection-previous))
             (expect (point) :not :to-equal (biblio--selection-previous))
             (expect (point) :not :to-equal (biblio--selection-previous))
+            (expect (point) :not :to-equal (biblio--selection-previous))
+            (expect (point) :not :to-equal (biblio--selection-previous))
             (expect (point) :not :to-equal (point-max))
             (expect (biblio-alist-get 'title (biblio--selection-metadata-at-point))
                     :to-match "^Turing lecture")))
@@ -202,12 +212,15 @@ month={Apr}, pages={147–156}}")
             (biblio--selection-browse)
             (expect 'browse-url
                     :to-have-been-called-with
-                    "http://dblp.org/rec/journals/cacm/Lamport15"))))
+                    "http://dblp.org/rec/journals/cacm/Lamport15")))
+        (it "complains about missing URLs"
+          (with-current-buffer selection-buffer
+            (expect #'biblio--selection-browse :to-throw 'error))))
       (describe "a selection command"
         (let ((bibtex "@article{empty}"))
           (spy-on #'biblio-dblp-backend
                   :and-call-fake
-                  (lambda (command metadata forward-to)
+                  (lambda (_command _metadata forward-to)
                     (funcall forward-to bibtex)))
           (it "can copy bibtex records"
             (with-current-buffer selection-buffer
@@ -236,7 +249,12 @@ month={Apr}, pages={147–156}}")
           (with-current-buffer selection-buffer
             (while (not (eq (point) (biblio--selection-next)))
               (expect (biblio-get-url (biblio--selection-metadata-at-point))
-                      :to-match "^http://")))))))
+                      :to-match "^http://"))))
+        (it "uses DOIs if URLs are unavailable"
+          (with-current-buffer selection-buffer
+            (goto-char (point-max))
+            (expect (biblio-get-url (biblio--selection-metadata-at-point))
+                    :to-match "^http://doi.org/"))))))
 
   (describe "In the arXiv module"
     (describe "biblio-arxiv--extract-year"
