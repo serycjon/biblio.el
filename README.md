@@ -12,7 +12,7 @@ automatically fetched from well-curated sources, and formatted as BibTeX.
 * `CrossRef`, an exhaustive academic search engine (recommended)
 * `arXiv`, an archive of pre-prints in various scientific fields
 * `DBLP`, a database of Computer Science publications
-* `dx.doi.org`, a DOI resolver (to retrieve BibTeX records from DOIs)
+* `doi.org`, a DOI resolver (to retrieve BibTeX records from DOIs)
 * `CrossCite`, an alternative DOI resolver and BibTeX formatting service
 * `Dissemin`, a database tracking the open access status of scholarly articles
 
@@ -40,7 +40,7 @@ list of results in `biblio-selection-mode`.  In that mode, use:
 ## Examples
 
 * To insert a clean BibTeX entry for
-  [this paper](http://dx.doi.org/10.1145/2676726.2677006) in the current buffer,
+  [this paper](http://doi.org/10.1145/2676726.2677006) in the current buffer,
   use
 
         M-x crossref-lookup RET fiat deductive delaware RET i

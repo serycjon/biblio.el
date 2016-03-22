@@ -1,4 +1,4 @@
-;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, dx.doi.org, and other sources, by DOI or by keywords -*- lexical-binding: t -*-
+;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, doi.org, and other sources, by DOI or by keywords -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
@@ -33,7 +33,7 @@
 ;; * `CrossRef', an exhaustive academic search engine (recommended)
 ;; * `arXiv', an archive of pre-prints in various scientific fields
 ;; * `DBLP', a database of Computer Science publications
-;; * `dx.doi.org', a DOI resolver (to retrieve BibTeX records from DOIs)
+;; * `doi.org', a DOI resolver (to retrieve BibTeX records from DOIs)
 ;; * `CrossCite', an alternative DOI resolver and BibTeX formatting service
 ;; * `Dissemin', a database tracking the open access status of scholarly articles
 ;;
@@ -60,7 +60,7 @@
 ;;
 ;; ## Examples
 ;;
-;; * To insert a clean BibTeX entry for http://dx.doi.org/10.1145/2676726.2677006
+;; * To insert a clean BibTeX entry for http://doi.org/10.1145/2676726.2677006
 ;;   in the current buffer, use
 ;;
 ;;         M-x crossref-lookup RET fiat deductive delaware RET i

@@ -188,7 +188,7 @@ URL and CALLBACK; see `url-queue-retrieve'"
 
 (defun biblio-cleanup-doi (doi)
   "Cleanup DOI string."
-  (biblio-strip (replace-regexp-in-string "https?://dx.doi.org/" "" doi)))
+  (biblio-strip (replace-regexp-in-string "https?://\\(dx\\.\\)?doi\\.org/" "" doi)))
 
 (defun biblio-remove-empty (strs)
   "Remove empty sequences from STRS."
@@ -329,7 +329,7 @@ Uses .url, and .doi as a fallback."
   (let-alist metadata
     (if .url .url
       (when .doi
-        (concat "https://dx.doi.org/" (url-encode-url .doi))))))
+        (concat "https://doi.org/" (url-encode-url .doi))))))
 
 (defun biblio--selection-browse ()
   "Open the current entry in a web browser."

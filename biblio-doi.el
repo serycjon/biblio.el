@@ -37,8 +37,8 @@
 ;;; Code:
 
 (defun biblio-doi--dx-url (doi)
-  "Create a dx.doi.org url for DOI."
-  (format "http://dx.doi.org/%s" doi))
+  "Create a doi.org url for DOI."
+  (format "http://doi.org/%s" doi))
 
 (defun biblio-doi--crosscite-url (doi)
   "Create a crosscite URL to use as a fallback for DOI.
@@ -106,7 +106,7 @@ FORWARD-TO is the callback to call with the results of the search."
   (biblio-doi--generic-url-callback #'biblio-doi--restore-mime-accept forward-to))
 
 (defun biblio-doi--forward-bibtex-dx (doi forward-to)
-  "Forward BibTeX entry for DOI from dx.doi.org to FORWARD-TO."
+  "Forward BibTeX entry for DOI from doi.org to FORWARD-TO."
   (biblio-doi--set-mime-accept)
   (biblio-url-retrieve (biblio-doi--dx-url doi) (biblio-doi--dx-callback forward-to)))
 
