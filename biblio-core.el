@@ -117,7 +117,7 @@ WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
   "Move point to beginning of response body."
   (goto-char (point-min))
   (unless (re-search-forward "^\n" nil t)
-    (error "Could not find body in response %S" (buffer-string))))
+    (error "Invalid response from server: %S" (buffer-string))))
 
 (defun biblio-response-as-utf-8 ()
   "Extract body of response."
@@ -337,7 +337,7 @@ Uses .url, and .doi as a fallback."
   (interactive)
   (-if-let* ((url (biblio-get-url (biblio--selection-metadata-at-point))))
       (browse-url url)
-    (error "No URL for this entry")))
+    (user-error "This record does not contain a URL")))
 
 (defun biblio--selection-next ()
   "Move to next seach result."
@@ -393,21 +393,21 @@ Uses .url, and .doi as a fallback."
 
 (defun biblio--selection-metadata-at-point ()
   "Return the metadata of the entry at point."
-  (get-text-property (point) 'biblio-metadata))
+  (or (get-text-property (point) 'biblio-metadata)
+      (user-error "No entry at point")))
 
 (defun biblio--selection-forward-bibtex (forward-to &optional quit)
   "Retrieve BibTeX for entry at point and pass it to FORWARD-TO.
 If QUIT is set, also kill the results buffer."
-  (-if-let* ((metadata (biblio--selection-metadata-at-point))
-             (results-buffer (current-buffer)))
-      (progn
-        (funcall (biblio-alist-get 'backend metadata)
-                 'forward-bibtex metadata
-                 (lambda (bibtex)
-                   (with-current-buffer results-buffer
-                     (funcall forward-to bibtex metadata))))
-        (when quit (quit-window)))
-    (error "No entry at point")))
+  (let* ((metadata (biblio--selection-metadata-at-point))
+         (results-buffer (current-buffer)))
+    (progn
+      (funcall (biblio-alist-get 'backend metadata)
+               'forward-bibtex metadata
+               (lambda (bibtex)
+                 (with-current-buffer results-buffer
+                   (funcall forward-to bibtex metadata))))
+      (when quit (quit-window)))))
 
 (defvar biblio-selection-mode-actions-alist nil
   "An alist of extensions for `biblio-selection-mode'.
@@ -451,9 +451,8 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
 Interactively, query for ACTION from
 `biblio-selection-mode-actions-alist'."
   (interactive (list (biblio--read-selection-extended-action)))
-  (-if-let* ((metadata (biblio--selection-metadata-at-point)))
-      (funcall action metadata)
-    (user-error "No entry at point")))
+  (let* ((metadata (biblio--selection-metadata-at-point)))
+    (funcall action metadata)))
 
 (defun biblio--selection-help ()
   "Show help on local keymap."

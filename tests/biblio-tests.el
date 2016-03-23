@@ -355,9 +355,9 @@ month={Apr}, pages={147–156}}")
                     "http://dblp.org/rec/journals/cacm/Lamport15")))
         (it "complains about missing URLs"
           (with-current-buffer results-buffer
-            (goto-char (point-max))
+            (goto-char (1- (point-max)))
             (expect #'biblio--selection-browse
-                    :to-throw 'error '("No URL for this entry"))))
+                    :to-throw 'error '("This record does not contain a URL"))))
         (it "lets users click buttons"
           (with-current-buffer results-buffer
             (expect (search-forward "http" nil t) :to-be-truthy)

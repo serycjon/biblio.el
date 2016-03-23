@@ -127,7 +127,7 @@ Interactively, or if CLEANUP is non-nil, pass DOI through
 RECORD is a formatted record as expected by `biblio-lookup'."
   (let-alist record
     (if .doi (dissemin-lookup .doi)
-      (error "No DOI found in this entry"))))
+      (user-error "Dissemin needs a DOI, but this record does not contain one"))))
 
 ;;;###autoload
 (defun biblio-dissemin--register-action ()
