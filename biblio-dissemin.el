@@ -51,7 +51,8 @@
     (biblio-with-fontification 'font-lock-preprocessor-face
       (biblio-insert-with-prefix ">> " .identifier))
     (biblio-dissemin--insert-button .pdf_url "   ")
-    (biblio-dissemin--insert-button .splash_url "   ")
+    (unless (string= .pdf_url .splash_url)
+      (biblio-dissemin--insert-button .splash_url "   "))
     (insert "\n")
     (biblio-with-fontification 'font-lock-doc-face
       (biblio-insert-with-prefix "   " .abstract))))
@@ -77,7 +78,8 @@
     (biblio-dissemin--insert-button .pdf_url "")
     (if (seq-empty-p .records)
         (insert "\n\n(no records)")
-      (seq-do #'biblio-dissemin--insert-record .records))))
+      (seq-do #'biblio-dissemin--insert-record .records))
+    (goto-char (point-min))))
 
 (defun biblio-dissemin--print-results (paper)
   "Create a buffer for Dissemin, and print PAPER into it."
@@ -119,8 +121,10 @@ Interactively, or if CLEANUP is non-nil, pass DOI through
   (interactive "MDOI: \nd")
   (when cleanup
     (setq doi (biblio-cleanup-doi doi)))
-  (biblio-url-retrieve (biblio-dissemin--url doi)
-                       (biblio-generic-url-callback #'biblio-dissemin--callback)))
+  (let ((buf (biblio-dissemin--make-buffer)))
+    (biblio-url-retrieve (biblio-dissemin--url doi)
+                         (biblio-generic-url-callback #'biblio-dissemin--callback))
+    buf))
 
 ;;;###autoload
 (defalias 'dissemin-lookup 'biblio-dissemin-lookup)
