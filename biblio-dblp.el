@@ -74,7 +74,6 @@
 (defun biblio-dblp-backend (command &optional arg &rest more)
   "A DBLP backend for biblio.el.
 COMMAND, ARG, MORE: See `biblio-backends'."
-  (interactive (list 'interactive))
   (pcase command
     (`name "DBLP")
     (`prompt "DBLP query: ")
