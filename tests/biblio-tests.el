@@ -62,8 +62,6 @@ month={Apr}, pages={147–156}}")
   publisher    = {Association for Computing Machinery (ACM)}
 }")
 
-(defun biblio--dummy-backend (&rest _args)
-  "Dummy backend to work around https://github.com/jorgenschaefer/emacs-buttercup/issues/52.")
 (defun biblio--dummy-cleanup-func ()
   "Do nothing with no args.")
 (defun biblio--dummy-callback (&optional arg)
@@ -71,19 +69,19 @@ month={Apr}, pages={147–156}}")
   arg)
 
 (defconst sample-items
-  '(((backend . biblio--dummy-backend)
+  '(((backend . biblio-dblp-backend)
      (title . "Who builds a house without drawing blueprints?")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
      (url . "http://dblp.org/rec/journals/cacm/Lamport15"))
-    ((backend . biblio--dummy-backend)
+    ((backend . biblio-dblp-backend)
      (title . "Turing lecture: The computer science of concurrency: the early years.")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
      (url . "http://dblp.org/rec/journals/cacm/Lamport15a"))
-    ((backend . biblio--dummy-backend)
+    ((backend . biblio-dblp-backend)
      (title . "An incomplete history of concurrency chapter 1. 1965-1977.")
      (authors "Leslie Lamport") (container . "PODC") (type . "Conference and Workshop Papers")
      (url . "http://dblp.org/rec/conf/podc/Lamport13"))
-    ((backend . biblio--dummy-backend)
+    ((backend . biblio-dblp-backend)
      (title . "Euclid Writes an Algorithm: A Fairytale.")
      (authors "Leslie Lamport") (container . "Int. J. Software and Informatics") (type . "Journal Articles")
      (url . "http://dblp.org/rec/journals/ijsi/Lamport11"))
@@ -98,11 +96,11 @@ month={Apr}, pages={147–156}}")
      (container . ["Lecture Notes in Computer Science" "Distributed Computing"])
      (references "10.1007/978-3-642-24100-0_10")
      (type . "book-chapter") (url . "http://dx.doi.org/10.1007/978-3-642-24100-0_10"))
-    ((backend . biblio--dummy-backend)
+    ((backend . biblio-dblp-backend)
      (title . "Implementing dataflow with threads.")
      (authors "Leslie Lamport") (container . "Distributed Computing") (type . "Journal Articles")
      (url . nil) (doi . "10.1007/s00446-008-0065-1"))
-    ((backend . biblio--dummy-backend)
+    ((backend . biblio-dblp-backend)
      (title . "The PlusCal Algorithm Language.")
      (authors "Leslie Lamport") (container . "ICTAC") (type . "Conference and Workshop Papers")
      (url . nil) (doi . nil))))
@@ -179,13 +177,13 @@ month={Apr}, pages={147–156}}")
 
       (describe "-generic-url-callback"
         :var (source-buffer)
-        (spy-on #'biblio--dummy-callback :and-call-through)
         (before-each
+          (spy-on #'biblio--dummy-callback :and-call-through)
+          (spy-on #'biblio--dummy-cleanup-func)
           (with-current-buffer (setq source-buffer (get-buffer-create " *url*"))
             (erase-buffer) ;; FIXME use an after-each form instead
             (insert "Some\npretty\nheaders\n\nAnd a response.")))
         (it "calls the cleanup function"
-          (spy-on #'biblio--dummy-cleanup-func)
           (with-current-buffer source-buffer
             (funcall (biblio-generic-url-callback
                       #'ignore #'biblio--dummy-cleanup-func)
@@ -220,9 +218,9 @@ month={Apr}, pages={147–156}}")
           (it "swallows invalid response bodies"
             (with-temp-buffer
               (expect (lambda () (shut-up
-                                   (funcall (biblio-generic-url-callback
-                                             #'biblio--dummy-callback #'ignore)
-                                            nil)))
+                              (funcall (biblio-generic-url-callback
+                                        #'biblio--dummy-callback #'ignore)
+                                       nil)))
                       :not :to-throw))
             (expect #'biblio--dummy-callback :not :to-have-been-called))
           (it "forwards expected errors"
@@ -346,7 +344,9 @@ month={Apr}, pages={147–156}}")
                     :to-match "\\`https://doi.org/"))))
 
       (describe "a browsing command"
-        (spy-on #'browse-url)
+        (before-each
+          (spy-on #'browse-url))
+
         (it "opens the right URL"
           (with-current-buffer results-buffer
             (biblio--selection-browse)
@@ -364,44 +364,46 @@ month={Apr}, pages={147–156}}")
             (push-button (point))
             (expect 'browse-url :to-have-been-called))))
 
-      (describe "a selection command"
-        (let ((bibtex "@article{empty}"))
-          (spy-on #'biblio--dummy-backend
-                  :and-call-fake
-                  (lambda (_command _metadata forward-to)
-                    (funcall forward-to bibtex)))
+      (let ((bibtex "@article{empty}"))
+        (describe "a selection command"
+          (before-each
+            (spy-on #'biblio-dblp-backend
+                    :and-call-fake
+                    (lambda (_command _metadata forward-to)
+                      (funcall forward-to bibtex))))
           (it "can copy bibtex records"
             (with-current-buffer results-buffer
               (shut-up (biblio--selection-copy))
               (expect (car kill-ring) :to-equal bibtex)
-              (expect #'biblio--dummy-backend :to-have-been-called)))
+              (expect #'biblio-dblp-backend :to-have-been-called)))
           (it "can copy bibtex records and quit"
             (with-current-buffer results-buffer
               (shut-up (biblio--selection-copy-quit))
               (expect (car kill-ring) :to-equal bibtex)
-              (expect #'biblio--dummy-backend :to-have-been-called)))
+              (expect #'biblio-dblp-backend :to-have-been-called)))
           (it "can insert bibtex records"
             (with-current-buffer results-buffer
               (shut-up (biblio--selection-insert))
               (with-current-buffer source-buffer
                 (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
-              (expect #'biblio--dummy-backend :to-have-been-called)))
+              (expect #'biblio-dblp-backend :to-have-been-called)))
           (it "can insert bibtex records and quit"
             (with-current-buffer results-buffer
               (shut-up (biblio--selection-insert-quit))
               (with-current-buffer source-buffer
                 (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
-              (expect #'biblio--dummy-backend :to-have-been-called)))
+              (expect #'biblio-dblp-backend :to-have-been-called)))
           (it "complains about empty entries"
             (with-temp-buffer
               (expect #'biblio--selection-copy
                       :to-throw 'error '("No entry at point"))))))
 
       (describe "--selection-extended-action"
-        (spy-on 'biblio-completing-read-alist
-                :and-return-value #'biblio-dissemin--lookup-record)
+        (before-each
+          (spy-on 'biblio-completing-read-alist
+                  :and-return-value #'biblio-dissemin--lookup-record)
+          (spy-on #'biblio-dissemin--lookup-record))
         (it "runs an action as expected"
-          (spy-on #'biblio-dissemin--lookup-record)
           (with-current-buffer results-buffer
             (call-interactively #'biblio--selection-extended-action)
             (expect #'biblio-dissemin--lookup-record
@@ -415,7 +417,8 @@ month={Apr}, pages={147–156}}")
 
       (dolist (func '(biblio-completing-read biblio-completing-read-alist))
         (describe (format "%S" func)
-          (spy-on #'completing-read)
+          (before-each
+            (spy-on #'completing-read))
           (it "uses ido by default"
             (let ((completing-read-function #'completing-read-default))
               (funcall func "A" nil)
@@ -435,8 +438,9 @@ month={Apr}, pages={147–156}}")
     (describe "in the searching section,"
 
       (describe "--select-backend"
+        (before-each
+          (spy-on #'biblio-completing-read-alist))
         (it "offers all backends"
-          (spy-on #'biblio-completing-read-alist)
           (biblio--select-backend)
           (expect #'biblio-completing-read-alist
                   :to-have-been-called-with
@@ -469,13 +473,12 @@ month={Apr}, pages={147–156}}")
 (defconst biblio-tests--feature-tests
   '((crossref "renear -ontologies" "Strategic Reading" biblio-crossref-backend)
     (dblp "author:lamport" "Who builds a house" biblio-dblp-backend)
-    (arxiv "all:electron" "Impact of Electron-Electron Cusp" biblio-arxiv-backend)
-    (dissemin "10.1016/j.paid.2009.02.013" nil nil)))
+    (arxiv "all:electron" "Impact of Electron-Electron Cusp" biblio-arxiv-backend)))
 
 (defun biblio-tests--cache-file-path (fname)
   "Compute full name of cache file FNAME."
   (let ((test-dir (file-name-directory biblio-tests--script-full-path)))
-    (expand-file-name fname test-dir)))
+    (expand-file-name fname (expand-file-name "cache" test-dir))))
 
 (defun biblio-tests--url (backend-sym query)
   "Compute a URL from BACKEND-SYM and QUERY."
@@ -487,22 +490,28 @@ month={Apr}, pages={147–156}}")
             '(("1159890.806466" . "http://doi.org/10.1145/1159890.806466")
               ("science.1157784" . "http://doi.org/10.1126/science.1157784")
               ("Lamport15" . "http://dblp.org/rec/bib2/journals/cacm/Lamport15")
-              ("1.1383585" . "http://doi.org/10.1063/1.1383585"))
+              ("1.1383585" . "http://doi.org/10.1063/1.1383585")
+              ("dissemin-j.paid.2009.02.013" . "http://dissem.in/api/10.1016/j.paid.2009.02.013")
+              ("dissemin-1159890.806466" . "http://dissem.in/api/10.1145/1159890.806466")
+              ("dissemin-science.1157784" . "http://dissem.in/api/10.1126/science.1157784"))
             (seq-map (lambda (test)
                        (pcase test
                          (`(,server ,query . ,_)
                           (cons (format "%S-response" server) (biblio-tests--url server query)))))
                      biblio-tests--feature-tests))))
 
-(defun biblio-tests--store-responses ()
-  "Download and save responses from various tested APIs."
-  (interactive)
+(defun biblio-tests--store-responses (force)
+  "Download and save responses from various tested APIs.
+With FORCE, update existing records."
+  (interactive "P")
   (pcase-dolist (`(,fpath . ,url) biblio-tests--cache)
     (let ((url-mime-accept-string
            (unless (string-match-p "response$" fpath)
              biblio-doi--dx-mime-accept)))
-      (with-current-buffer (url-retrieve-synchronously url)
-        (write-file fpath)))))
+      (unless (and (file-exists-p fpath) (not force))
+        (with-current-buffer (url-retrieve-synchronously url)
+          (write-file fpath))
+        (kill-buffer)))))
 
 (defconst biblio-tests--reverse-cache
   (seq-map (lambda (p) (cons (cdr p) (car p))) biblio-tests--cache))
@@ -526,10 +535,11 @@ serviced from disk, and others raise an error."
     (when backend
       (describe (format "The %S backend" sym)
         :var (results-buffer)
-        (biblio-tests--intercept-url-requests)
+        (before-each
+          (biblio-tests--intercept-url-requests)
+          (spy-on #'read-string :and-return-value query))
 
-        (it "downloads and renders results properly"
-          (spy-on #'read-string :and-return-value query)
+        (it "downloads results properly"
           (expect
            (shut-up
              (setq results-buffer
@@ -550,16 +560,22 @@ serviced from disk, and others raise an error."
           (it "has an entry with the right title"
             (with-current-buffer results-buffer
               (expect (looking-at-p first-result))))
-          (when (eq sym 'crossref)
-            (it "has at least the right fields, in the right order"
-              (with-current-buffer results-buffer
-                (expect (search-forward "In: " nil t) :to-be-truthy)
-                (expect (search-forward "Type: " nil t) :to-be-truthy)
-                (expect (search-forward "Publisher: " nil t) :to-be-truthy)
-                (expect (search-forward "References: " nil t) :to-be-truthy)
-                (expect (search-forward "URL: " nil t) :to-be-truthy)
-                (expect (button-label (button-at (1- (point-at-eol)))) :to-match "http://")
-                (expect (search-backward "\n\n" nil t) :not :to-be-truthy))))
+          (pcase sym
+            (`crossref
+             (it "has at least the right fields, in the right order"
+               (with-current-buffer results-buffer
+                 (expect (search-forward "In: " nil t) :to-be-truthy)
+                 (expect (search-forward "Type: " nil t) :to-be-truthy)
+                 (expect (search-forward "Publisher: " nil t) :to-be-truthy)
+                 (expect (search-forward "References: " nil t) :to-be-truthy)
+                 (expect (search-forward "URL: " nil t) :to-be-truthy)
+                 (expect (button-label (button-at (1- (point-at-eol)))) :to-match "http://")
+                 (expect (search-backward "\n\n" nil t) :not :to-be-truthy))))
+            (`arxiv
+             (it "shows affiliations"
+               (with-current-buffer results-buffer
+                 (biblio--selection-first)
+                 (expect (search-forward " (NMRC, University College, Cork, Ireland)" nil t) :to-be-truthy)))))
           (it "has no empty titles"
             (with-current-buffer results-buffer
               (expect (search-forward "\n\n> \n" nil t) :not :to-be-truthy)))
@@ -590,15 +606,52 @@ serviced from disk, and others raise an error."
                    :to-match "\\`Auto-generating a BibTeX entry")
                   (expect auto-bibtex :to-match "\\`@Online{")))))))))
 
-  (describe "`doi-insert-bibtex'"
-    (biblio-tests--intercept-url-requests)
-    (it "downloads, inserts, and formats the right entry"
+  (describe "biblio-doi"
+    (before-each
+      (biblio-tests--intercept-url-requests))
+    (it "downloads and formats a record properly"
       (with-temp-buffer
         (shut-up (doi-insert-bibtex "10.1145/1159890.806466"))
         (expect (buffer-string)
                 :to-equal (concat (biblio-format-bibtex (buffer-string)) "\n\n"))
         (expect (buffer-string)
-                :to-match "journal += {ACM SIGOA Newsletter}")))))
+                :to-match "journal += {ACM SIGOA Newsletter}"))))
+
+  (describe "biblio-dissemin"
+    (before-each
+      (biblio-tests--intercept-url-requests))
+    (dolist (doi '("10.1145/1159890.806466" "10.1016/j.paid.2009.02.013" "10.1126/science.1157784"))
+      (describe (format "(for DOI %S)" doi)
+        :var (buf)
+        (it "creates a results buffer properly"
+          (shut-up (setq buf (dissemin-lookup doi)))
+          (expect (buffer-live-p buf) :to-be-truthy)
+          (expect (buffer-name buf) :to-match "Dissemin")
+          (expect (buffer-size buf) :to-be-greater-than 0))
+        (it "puts the point at the beginning of the buffer"
+          (with-current-buffer buf
+            (expect (point) :to-equal 1)))
+        (if (string= doi "10.1126/science.1157784")
+            (it "shows a message when no records are available"
+              (with-current-buffer buf
+                (expect (search-forward "(no records)" nil t) :to-be-truthy)))
+          (it "loads records, when available"
+            (with-current-buffer buf
+              (expect (search-forward ">> ft" nil t) :to-be-truthy)))
+          (it "hyperlinks URLs"
+            (with-current-buffer buf
+              (expect (search-forward "  http://" nil t) :to-be-truthy)
+              (expect (button-at (point)) :to-be-truthy)))
+          (it "does not duplicate urls inside a given record"
+            (with-temp-buffer
+              (let ((temp (current-buffer)))
+                (with-current-buffer buf
+                  (copy-to-buffer temp (point-min) (point-max)))
+                (goto-char (point-min))
+                (expect (buffer-size) :to-equal
+                        (progn
+                          (delete-duplicate-lines (point-min) (point-max))
+                          (buffer-size)))))))))))
 
 (provide 'biblio-tests)
 ;;; biblio-tests.el ends here
