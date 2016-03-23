@@ -448,7 +448,20 @@ month={Apr}, pages={147–156}}")
                   '(("arXiv" . biblio-arxiv-backend)
                     ("CrossRef" . biblio-crossref-backend)
                     ("DBLP" . biblio-dblp-backend))
-                  nil t)))))
+                  nil t)))
+
+      (describe "-lookup"
+        (before-each
+          (spy-on #'biblio--lookup-1)
+          (spy-on #'biblio--select-backend :and-return-value #'biblio-dblp-backend)
+          (spy-on #'read-string :and-return-value "query"))
+        (it "interactively prompts for a backend"
+          (call-interactively #'biblio-lookup)
+          (expect #'biblio--select-backend :to-have-been-called))
+        (it "asks for a query string"
+          (call-interactively #'biblio-lookup)
+          (expect #'read-string :to-have-been-called)
+          (expect #'biblio--lookup-1 :to-have-been-called-with #'biblio-dblp-backend "query")))))
 
   (describe "In the CrossRef module"
 
