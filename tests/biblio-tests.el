@@ -484,7 +484,8 @@ month={Apr}, pages={147–156}}")
 (defconst biblio-tests--cache
   (seq-map (lambda (pair) (cons (biblio-tests--cache-file-path (car pair)) (cdr pair)))
            (append
-            '(("science.1157784" . "http://doi.org/10.1126/science.1157784")
+            '(("1159890.806466" . "http://doi.org/10.1145/1159890.806466")
+              ("science.1157784" . "http://doi.org/10.1126/science.1157784")
               ("Lamport15" . "http://dblp.org/rec/bib2/journals/cacm/Lamport15")
               ("1.1383585" . "http://doi.org/10.1063/1.1383585"))
             (seq-map (lambda (test)
@@ -587,7 +588,17 @@ serviced from disk, and others raise an error."
                       (lambda (auto-bib) (setq auto-bibtex auto-bib)))
                      (shut-up-current-output))
                    :to-match "\\`Auto-generating a BibTeX entry")
-                  (expect auto-bibtex :to-match "\\`@Online{"))))))))))
+                  (expect auto-bibtex :to-match "\\`@Online{")))))))))
+
+  (describe "`doi-insert-bibtex'"
+    (biblio-tests--intercept-url-requests)
+    (it "downloads, inserts, and formats the right entry"
+      (with-temp-buffer
+        (shut-up (doi-insert-bibtex "10.1145/1159890.806466"))
+        (expect (buffer-string)
+                :to-equal (concat (biblio-format-bibtex (buffer-string)) "\n\n"))
+        (expect (buffer-string)
+                :to-match "journal += {ACM SIGOA Newsletter}")))))
 
 (provide 'biblio-tests)
 ;;; biblio-tests.el ends here
