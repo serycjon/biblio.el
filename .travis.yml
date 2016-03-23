@@ -16,4 +16,5 @@ install:
   - make depends
 
 script:
+  - make elc
   - make test
