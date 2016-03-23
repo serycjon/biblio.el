@@ -28,6 +28,7 @@
 
 (require 'bibtex)
 (require 'browse-url)
+(require 'hl-line)
 (require 'ido)
 (require 'json)
 (require 'url-queue)
@@ -343,6 +344,11 @@ Uses .url, and .doi as a fallback."
   (interactive)
   (biblio--selection-move #'end-of-line #'re-search-forward))
 
+(defun biblio--selection-first ()
+  "Move to first search result."
+  (goto-char (point-min))
+  (biblio--selection-move #'ignore #'re-search-forward))
+
 (defun biblio--selection-previous ()
   "Move to previous seach result."
   (interactive)
@@ -479,10 +485,10 @@ Interactively, query for ACTION from
   "Browse bibliographic search results.
 \\{biblio-selection-mode-map}"
   (hl-line-mode)
-  (setq truncate-lines nil)
   (visual-line-mode)
+  (setq truncate-lines nil)
   (setq-local cursor-type nil)
-  (message "Tip: show `biblio-selection-mode''s quick reference with `h'"))
+  (setq-local buffer-read-only t))
 
 ;;; Printing search results
 
@@ -515,6 +521,11 @@ NEWLINE is non-nil, add a newline before the main text."
     (let ((fontified (propertize prefix 'face 'biblio-detail-header-face)))
       (biblio-insert-with-prefix fontified items))))
 
+(defun biblio--nonempty-string-p (str)
+  "Return STR if STR is non-empty."
+  (unless (seq-empty-p str)
+    str))
+
 (defun biblio--cleanup-field (text)
   "Cleanup TEXT for presentation to the user."
   (when text (replace-regexp-in-string "[ \r\n\t]+" " " text)))
@@ -527,7 +538,8 @@ NEWLINE is non-nil, add a newline before the main text."
 
 (defun biblio--prepare-title (title)
   "Cleanup TITLE for presentation to the user."
-  (or (biblio--cleanup-field title) "(no title)"))
+  (or (biblio--nonempty-string-p (biblio--cleanup-field title))
+      "(no title)"))
 
 (defun biblio--browse-url (button)
   "Open web browser on page pointed to by BUTTON."
@@ -567,36 +579,46 @@ space after the record."
 
 (defun biblio--make-buffer (source-buffer backend-name)
   "Find or create the results buffer for SOURCE-BUFFER and BACKEND-NAME."
-  (get-buffer-create (format "*%s search started from %s*"
-                             backend-name
-                             (buffer-name source-buffer))))
-
-(defun biblio-insert-results (source-buffer backend-name items)
-  "Create a results buffer for SOURCE-BUFFER and BACKEND-NAME and print ITEMS in it."
-  (with-current-buffer (biblio--make-buffer source-buffer backend-name)
+  (with-current-buffer (get-buffer-create
+                        (format "*%s search started from %s*"
+                                backend-name
+                                (buffer-name source-buffer)))
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (seq-do #'biblio-insert-result (print items))
-      (goto-char (point-min))
-      (biblio-selection-mode))
-    (setq-local biblio--source-buffer source-buffer)
-    (setq buffer-read-only t)
-    (current-buffer)))
+      (biblio-selection-mode)
+      (setq buffer-read-only t)
+      (setq biblio--source-buffer source-buffer)
+      (current-buffer))))
+
+(defun biblio--insert-results-1 (items)
+  "Populate current buffer with search results ITEMS."
+  (let ((inhibit-read-only t))
+    (erase-buffer)
+    (seq-do #'biblio-insert-result items)))
+
+(defun biblio-insert-results (items)
+  "Populate current buffer with ITEMS, then display it."
+  (biblio--insert-results-1 items)
+  (pop-to-buffer (current-buffer))
+  (biblio--selection-first)
+  (message "Point is %S in buffer %S" (point) (current-buffer))
+  (hl-line-highlight))
 
 (defun biblio--tag-backend (backend items)
   "Add (backend . BACKEND) to each alist in ITEMS."
   (seq-map (lambda (i) (cons `(backend . ,backend) i)) items))
 
-(defun biblio--callback (source-buffer backend)
-  "Generate a search results callback for SOURCE-BUFFER.
+(defun biblio--callback (results-buffer backend)
+  "Generate a search results callback for RESULTS-BUFFER.
 Results are parsed with (BACKEND 'parse-buffer)."
   (biblio-generic-url-callback
    (lambda () ;; no allowed errors, so no arguments
      "Parse results of bibliographic search."
-     (->> (funcall backend 'parse-buffer)
-          (biblio--tag-backend backend)
-          (biblio-insert-results source-buffer (funcall backend 'name))
-          (pop-to-buffer)))))
+     (let ((results (biblio--tag-backend backend (funcall backend 'parse-buffer))))
+       (with-current-buffer results-buffer
+         (biblio-insert-results results)
+         )
+       (message "Tip: learn to browse results with `h'")))))
 
 ;;; Searching
 
@@ -665,10 +687,13 @@ themselves to biblio-backends.")
   (biblio-completing-read-alist "Backend: " (biblio--named-backends) nil t))
 
 (defun biblio--lookup-1 (backend query)
-  "Just like `biblio-lookup' on BACKEND, but use QUERY."
-  (biblio-url-retrieve
-   (funcall backend 'url query)
-   (biblio--callback (current-buffer) backend)))
+  "Just like `biblio-lookup' on BACKEND, but use QUERY.
+Returns the buffer in which results will be inserted."
+  (let ((results-buffer (biblio--make-buffer (current-buffer) (funcall backend 'name))))
+    (biblio-url-retrieve
+     (funcall backend 'url query)
+     (biblio--callback results-buffer backend))
+    results-buffer))
 
 ;;;###autoload
 (defun biblio-lookup (backend)
