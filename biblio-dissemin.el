@@ -112,7 +112,7 @@
   (biblio-dissemin--print-results (biblio-dissemin--parse-buffer)))
 
 ;;;###autoload
-(defun dissemin-lookup (doi &optional cleanup)
+(defun biblio-dissemin-lookup (doi &optional cleanup)
   "Retrieve a record by DOI from Dissemin, and display it.
 Interactively, or if CLEANUP is non-nil, pass DOI through
 `biblio-cleanup-doi'."
@@ -121,6 +121,9 @@ Interactively, or if CLEANUP is non-nil, pass DOI through
     (setq doi (biblio-cleanup-doi doi)))
   (biblio-url-retrieve (biblio-dissemin--url doi)
                        (biblio-generic-url-callback #'biblio-dissemin--callback)))
+
+;;;###autoload
+(defalias 'dissemin-lookup 'biblio-dissemin-lookup)
 
 (defun biblio-dissemin--lookup-record (record)
   "Retrieve a RECORD from Dissemin, and display it.

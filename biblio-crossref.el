@@ -88,10 +88,13 @@ COMMAND, ARG, MORE: See `biblio-backends'."
 (add-hook 'biblio-init-hook #'biblio-crossref-backend)
 
 ;;;###autoload
-(defun crossref-lookup ()
+(defun biblio-crossref-lookup ()
   "Start a CrossRef search."
   (interactive)
   (biblio-lookup #'biblio-crossref-backend))
+
+;;;###autoload
+(defalias 'crossref-lookup 'biblio-crossref-lookup)
 
 (provide 'biblio-crossref)
 ;;; biblio-crossref.el ends here

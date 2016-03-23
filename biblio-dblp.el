@@ -87,10 +87,13 @@ COMMAND, ARG, MORE: See `biblio-backends'."
 (add-hook 'biblio-init-hook #'biblio-dblp-backend)
 
 ;;;###autoload
-(defun dblp-lookup ()
+(defun biblio-dblp-lookup ()
   "Start a DBLP search."
   (interactive)
   (biblio-lookup #'biblio-dblp-backend))
+
+;;;###autoload
+(defalias 'dblp-lookup 'biblio-dblp-lookup)
 
 (provide 'biblio-dblp)
 ;;; biblio-dblp.el ends here
