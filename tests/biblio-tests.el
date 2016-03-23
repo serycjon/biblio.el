@@ -493,7 +493,8 @@ month={Apr}, pages={147–156}}")
               ("1.1383585" . "http://doi.org/10.1063/1.1383585")
               ("dissemin-j.paid.2009.02.013" . "http://dissem.in/api/10.1016/j.paid.2009.02.013")
               ("dissemin-1159890.806466" . "http://dissem.in/api/10.1145/1159890.806466")
-              ("dissemin-science.1157784" . "http://dissem.in/api/10.1126/science.1157784"))
+              ("dissemin-science.1157784" . "http://dissem.in/api/10.1126/science.1157784")
+              ("crosscite-zenodo.44331" . "http://crosscite.org/citeproc/format?doi=10.5281/zenodo.44331&style=bibtex&lang=en-US"))
             (seq-map (lambda (test)
                        (pcase test
                          (`(,server ,query . ,_)
@@ -510,24 +511,27 @@ With FORCE, update existing records."
              biblio-doi--dx-mime-accept)))
       (unless (and (file-exists-p fpath) (not force))
         (with-current-buffer (url-retrieve-synchronously url)
-          (write-file fpath))
-        (kill-buffer)))))
+          (write-file fpath)
+          (kill-buffer))))))
 
 (defconst biblio-tests--reverse-cache
   (seq-map (lambda (p) (cons (cdr p) (car p))) biblio-tests--cache))
 
-(defmacro biblio-tests--intercept-url-requests ()
+(defmacro biblio-tests--intercept-url-requests (&optional which-events)
   "Set up buttercup to intercept URL queries.
 Queries for stored urls (in `biblio-tests--reverse-cache') are
-serviced from disk, and others raise an error."
+serviced from disk; others are handled as an http error (expect
+if WHICH-EVENTS is given; in that case, WHICH-EVENTS is used
+instead."
   `(spy-on #'url-queue-retrieve
            :and-call-fake
            (lambda (url callback &optional cbargs)
-             (-if-let* ((file-name (cdr (assoc url biblio-tests--reverse-cache))))
-                 (with-temp-buffer
-                   (insert-file-contents-literally file-name nil)
-                   (apply callback nil cbargs))
-               (error "%S is not cached" url)))))
+             (with-temp-buffer
+               (-if-let* ((file-name (cdr (assoc url biblio-tests--reverse-cache))))
+                   (progn
+                     (insert-file-contents-literally file-name nil)
+                     (apply callback nil cbargs))
+                 (apply callback (or ,which-events '(:error (error http "Resource not cached"))) cbargs))))))
 
 (describe "Feature tests:"
 
@@ -608,14 +612,32 @@ serviced from disk, and others raise an error."
 
   (describe "biblio-doi"
     (before-each
-      (biblio-tests--intercept-url-requests))
+      (biblio-tests--intercept-url-requests '(:error (error http 406)))
+      (spy-on #'biblio-insert-results :and-call-through)
+      (spy-on #'biblio-crossref-backend :and-call-through)
+      (spy-on #'biblio-doi--crosscite-url :and-call-through))
     (it "downloads and formats a record properly"
       (with-temp-buffer
         (shut-up (doi-insert-bibtex "10.1145/1159890.806466"))
         (expect (buffer-string)
                 :to-equal (concat (biblio-format-bibtex (buffer-string)) "\n\n"))
         (expect (buffer-string)
-                :to-match "journal += {ACM SIGOA Newsletter}"))))
+                :to-match "journal += {ACM SIGOA Newsletter}")))
+    (it "falls back to crosscite if doi.org returns a 406"
+      (with-temp-buffer
+        (let ((buf (current-buffer))
+              (output (shut-up
+                        (doi-insert-bibtex "10.5281/zenodo.44331")
+                        (shut-up-current-output))))
+          (expect output :to-match "\\`Fetching http://doi")
+          (expect output :to-match "^Fetching http://crosscite.org")
+          (expect (current-buffer) :to-be buf)
+          (expect (buffer-live-p buf) :to-be-truthy)
+          (expect #'biblio-insert-results :not :to-have-been-called)
+          (expect #'biblio-crossref-backend :not :to-have-been-called)
+          (expect #'biblio-doi--crosscite-url :to-have-been-called)
+          ;; Note lack of spacing, due to invalid BibTeX key being created by CrossCite
+          (expect (buffer-string) :to-match "author={Pit-Claudel")))))
 
   (describe "biblio-dissemin"
     (before-each
