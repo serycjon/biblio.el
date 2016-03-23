@@ -650,7 +650,8 @@ serviced from disk, and others raise an error."
                 (goto-char (point-min))
                 (expect (buffer-size) :to-equal
                         (progn
-                          (delete-duplicate-lines (point-min) (point-max))
+                          (when (fboundp #'delete-duplicate-lines)
+                            (delete-duplicate-lines (point-min) (point-max)))
                           (buffer-size)))))))))))
 
 (provide 'biblio-tests)
