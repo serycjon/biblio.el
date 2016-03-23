@@ -64,7 +64,7 @@
   (decode-coding-region (point-min) (point-max) 'utf-8)
   (let-alist (car (xml-parse-region (point-min) (point-max)))
     (unless (string= (cadr .status) "OK")
-      (warn "Query failed with status %S" .status))
+      (display-warning 'biblio-dblp "DBLP query failed"))
     (seq-map #'biblio-dblp--extract-interesting-fields (seq-filter #'biblio-dblp--hitp .hits))))
 
 (defun biblio-dblp--url (query)

@@ -450,6 +450,27 @@ month={Apr}, pages={147–156}}")
                     ("DBLP" . biblio-dblp-backend))
                   nil t)))))
 
+  (describe "In the CrossRef module"
+
+    (describe "-crossref--parse-search-results"
+      (it "complains about non-ok statuses"
+        (expect (shut-up
+                  (with-temp-buffer
+                    (save-excursion (insert "{}"))
+                    (biblio-crossref--parse-search-results))
+                  (shut-up-current-output))
+                :to-equal "Warning (biblio-crossref): CrossRef query failed\n"))))
+
+  (describe "In the DBLP module"
+
+    (describe "-dblp--parse-search-results"
+      (it "complains about non-ok statuses"
+        (expect (shut-up
+                  (with-temp-buffer
+                    (biblio-dblp--parse-search-results))
+                  (shut-up-current-output))
+                :to-equal "Warning (biblio-dblp): DBLP query failed\n"))))
+
   (describe "In the Dissemin module"
 
     (describe "-dissemin-parse-record"
