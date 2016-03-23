@@ -64,7 +64,7 @@ month={Apr}, pages={147–156}}")
 
 (defun biblio--dummy-cleanup-func ()
   "Do nothing with no args.")
-(defun biblio--dummy-callback (&optional arg)
+(defun biblio-tests--dummy-callback (&optional arg)
   "Return a single (optional) ARG."
   arg)
 
@@ -178,7 +178,7 @@ month={Apr}, pages={147–156}}")
       (describe "-generic-url-callback"
         :var (source-buffer)
         (before-each
-          (spy-on #'biblio--dummy-callback :and-call-through)
+          (spy-on #'biblio-tests--dummy-callback :and-call-through)
           (spy-on #'biblio--dummy-cleanup-func)
           (with-current-buffer (setq source-buffer (get-buffer-create " *url*"))
             (erase-buffer) ;; FIXME use an after-each form instead
@@ -210,26 +210,26 @@ month={Apr}, pages={147–156}}")
             (with-current-buffer source-buffer
               (expect (shut-up
                         (funcall (biblio-generic-url-callback
-                                  #'biblio--dummy-callback)
+                                  #'biblio-tests--dummy-callback)
                                  errors)
                         (shut-up-current-output))
                       :to-match "\\`Error"))
-            (expect #'biblio--dummy-callback :not :to-have-been-called))
+            (expect #'biblio-tests--dummy-callback :not :to-have-been-called))
           (it "swallows invalid response bodies"
             (with-temp-buffer
               (expect (lambda () (shut-up
                               (funcall (biblio-generic-url-callback
-                                        #'biblio--dummy-callback #'ignore)
+                                        #'biblio-tests--dummy-callback #'ignore)
                                        nil)))
                       :not :to-throw))
-            (expect #'biblio--dummy-callback :not :to-have-been-called))
+            (expect #'biblio-tests--dummy-callback :not :to-have-been-called))
           (it "forwards expected errors"
             (with-current-buffer source-buffer
               (expect (funcall (biblio-generic-url-callback
-                                #'biblio--dummy-callback #'ignore '(http . 406))
+                                #'biblio-tests--dummy-callback #'ignore '(http . 406))
                                errors)
                       :to-equal '((http . 406))))
-            (expect #'biblio--dummy-callback :to-have-been-called))))
+            (expect #'biblio-tests--dummy-callback :to-have-been-called))))
 
       (describe "-cleanup-doi"
         (it "Handles prefixes properly"
@@ -247,7 +247,25 @@ month={Apr}, pages={147–156}}")
       (describe "-join"
         (it "removes empty entries before joining"
           (expect (biblio-join ", " "a" nil "b" nil "c" '[]) :to-equal "a, b, c")
-          (expect (biblio-join-1 ", " '("a" nil "b" nil "c" [])) :to-equal "a, b, c"))))
+          (expect (biblio-join-1 ", " '("a" nil "b" nil "c" [])) :to-equal "a, b, c")))
+
+      (describe "-url-retrieve"
+        :var (temp-buffer)
+        (before-each
+          (spy-on #'biblio-tests--dummy-callback)
+          (spy-on #'url-queue-retrieve)
+          (setq temp-buffer (get-buffer-create " *temp-url-retrieve*"))
+          (spy-on #'url-retrieve-synchronously :and-return-value temp-buffer))
+        (it "respects the biblio-synchronous setting when t"
+          (let ((biblio-synchronous t))
+            (shut-up (biblio-url-retrieve "url" #'biblio-tests--dummy-callback))
+            (expect #'url-retrieve-synchronously :to-have-been-called)
+            (expect #'biblio-tests--dummy-callback :to-have-been-called-with nil)))
+        (it "respects the biblio-synchronous setting when nil"
+          (let ((biblio-synchronous nil))
+            (shut-up (biblio-url-retrieve "url" #'biblio-tests--dummy-callback))
+            (expect #'url-queue-retrieve :to-have-been-called)
+            (expect #'biblio-tests--dummy-callback :not :to-have-been-called)))))
 
     (describe "in the major mode help section"
       :var (temp-buf doc-buf)
