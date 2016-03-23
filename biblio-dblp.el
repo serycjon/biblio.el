@@ -40,7 +40,9 @@
     (biblio-url-retrieve url (biblio-generic-url-callback
                               (lambda () ;; No allowed errors, so no arguments
                                 "Parse DBLP BibTeX results."
-                                (funcall forward-to (biblio-response-as-utf-8)))))))
+                                (funcall forward-to
+                                         (biblio-format-bibtex
+                                          (biblio-response-as-utf-8))))))))
 
 (defun biblio-dblp--extract-interesting-fields (item)
   "Prepare a DBLP search result ITEM for display."
