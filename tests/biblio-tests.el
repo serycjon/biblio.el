@@ -472,35 +472,48 @@ month={Apr}, pages={147–156}}")
     (arxiv "all:electron" "Impact of Electron-Electron Cusp" biblio-arxiv-backend)
     (dissemin "10.1016/j.paid.2009.02.013" nil nil)))
 
-(defun biblio-tests--response-file-name (server)
-  "Compute name of file containing cached response of SERVER."
+(defun biblio-tests--cache-file-path (fname)
+  "Compute full name of cache file FNAME."
   (let ((test-dir (file-name-directory biblio-tests--script-full-path)))
-    (expand-file-name (format "%S-response" server) test-dir)))
+    (expand-file-name fname test-dir)))
 
 (defun biblio-tests--url (backend-sym query)
   "Compute a URL from BACKEND-SYM and QUERY."
   (funcall (intern (format "biblio-%S--url" backend-sym)) query))
 
+(defconst biblio-tests--cache
+  (seq-map (lambda (pair) (cons (biblio-tests--cache-file-path (car pair)) (cdr pair)))
+           (append
+            '(("science.1157784" . "http://doi.org/10.1126/science.1157784")
+              ("Lamport15" . "http://dblp.org/rec/bib2/journals/cacm/Lamport15")
+              ("1.1383585" . "http://doi.org/10.1063/1.1383585"))
+            (seq-map (lambda (test)
+                       (pcase test
+                         (`(,server ,query . ,_)
+                          (cons (format "%S-response" server) (biblio-tests--url server query)))))
+                     biblio-tests--feature-tests))))
+
 (defun biblio-tests--store-responses ()
   "Download and save responses from various tested APIs."
   (interactive)
-  (pcase-dolist (`(,server ,query) biblio-tests--feature-tests)
-    (with-current-buffer (url-retrieve-synchronously (biblio-tests--url server query))
-      (write-file (biblio-tests--response-file-name server)))))
+  (pcase-dolist (`(,fpath . ,url) biblio-tests--cache)
+    (let ((url-mime-accept-string
+           (unless (string-match-p "response$" fpath)
+             biblio-doi--dx-mime-accept)))
+      (with-current-buffer (url-retrieve-synchronously url)
+        (write-file fpath)))))
 
-(defconst biblio-tests--url-to-response-file
-  (seq-map (lambda (p)
-             (cons (biblio-tests--url (car p) (cadr p)) (biblio-tests--response-file-name (car p))))
-           biblio-tests--feature-tests))
+(defconst biblio-tests--reverse-cache
+  (seq-map (lambda (p) (cons (cdr p) (car p))) biblio-tests--cache))
 
 (defmacro biblio-tests--intercept-url-requests ()
   "Set up buttercup to intercept URL queries.
-Queries for stored urls (in `biblio-tests--url-to-response-file') are
+Queries for stored urls (in `biblio-tests--reverse-cache') are
 serviced from disk, and others raise an error."
   `(spy-on #'url-queue-retrieve
            :and-call-fake
            (lambda (url callback &optional cbargs)
-             (-if-let* ((file-name (cdr (assoc url biblio-tests--url-to-response-file))))
+             (-if-let* ((file-name (cdr (assoc url biblio-tests--reverse-cache))))
                  (with-temp-buffer
                    (insert-file-contents-literally file-name nil)
                    (apply callback nil cbargs))
@@ -512,14 +525,16 @@ serviced from disk, and others raise an error."
     (when backend
       (describe (format "The %S backend" sym)
         :var (results-buffer)
+        (biblio-tests--intercept-url-requests)
 
         (it "downloads and renders results properly"
-          (biblio-tests--intercept-url-requests)
           (spy-on #'read-string :and-return-value query)
-          (expect (shut-up
-                    (setq results-buffer (biblio-lookup backend))
-                    (shut-up-current-output))
-                  :to-match "\\`Fetching "))
+          (expect
+           (shut-up
+             (setq results-buffer
+                   (funcall (intern (concat (symbol-name sym) "-lookup"))))
+             (shut-up-current-output))
+           :to-match "\\`Fetching "))
 
         (describe "produces a result buffer that"
           (it "is live"
@@ -531,7 +546,7 @@ serviced from disk, and others raise an error."
             (with-current-buffer results-buffer
               (expect (buffer-size) :to-be-greater-than 10)
               (expect (biblio--selection-previous) :to-equal 3)))
-          (it "has the right title"
+          (it "has an entry with the right title"
             (with-current-buffer results-buffer
               (expect (looking-at-p first-result))))
           (when (eq sym 'crossref)
@@ -546,7 +561,21 @@ serviced from disk, and others raise an error."
                 (expect (search-backward "\n\n" nil t) :not :to-be-truthy))))
           (it "has no empty titles"
             (with-current-buffer results-buffer
-              (expect (search-forward "\n\n> \n" nil t) :not :to-be-truthy))))))))
+              (expect (search-forward "\n\n> \n" nil t) :not :to-be-truthy)))
+          (describe "can compute a proper BibTeX entry that"
+            :var (bibtex)
+            (it "is correctly forwarded"
+              (with-current-buffer results-buffer
+                (shut-up
+                  (biblio--selection-forward-bibtex (lambda (bib _meta) (setq bibtex bib))))))
+            (it "is a string"
+              (expect (stringp bibtex) :to-be-truthy))
+            (it "is not empty"
+              (expect (seq-empty-p bibtex) :not :to-be-truthy))
+            (it "starts with @"
+              (expect bibtex :to-match "\\`@"))
+            (it "is properly formatted"
+              (expect bibtex :to-equal (biblio-format-bibtex bibtex)))))))))
 
 (provide 'biblio-tests)
 ;;; biblio-tests.el ends here
