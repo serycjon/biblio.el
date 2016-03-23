@@ -567,7 +567,8 @@ serviced from disk, and others raise an error."
             (it "is correctly forwarded"
               (with-current-buffer results-buffer
                 (shut-up
-                  (biblio--selection-forward-bibtex (lambda (bib _meta) (setq bibtex bib))))))
+                  (biblio--selection-forward-bibtex
+                   (lambda (bib _meta) (setq bibtex bib))))))
             (it "is a string"
               (expect (stringp bibtex) :to-be-truthy))
             (it "is not empty"
@@ -575,7 +576,18 @@ serviced from disk, and others raise an error."
             (it "starts with @"
               (expect bibtex :to-match "\\`@"))
             (it "is properly formatted"
-              (expect bibtex :to-equal (biblio-format-bibtex bibtex)))))))))
+              (expect bibtex :to-equal (biblio-format-bibtex bibtex)))
+            (it "can be auto-generated"
+              (with-current-buffer results-buffer
+                (let (auto-bibtex)
+                  (expect
+                   (shut-up
+                     (biblio-arxiv--forward-bibtex
+                      (cons '(doi . nil) (biblio--selection-metadata-at-point))
+                      (lambda (auto-bib) (setq auto-bibtex auto-bib)))
+                     (shut-up-current-output))
+                   :to-match "\\`Auto-generating a BibTeX entry")
+                  (expect auto-bibtex :to-match "\\`@Online{"))))))))))
 
 (provide 'biblio-tests)
 ;;; biblio-tests.el ends here

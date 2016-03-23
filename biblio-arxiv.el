@@ -62,7 +62,7 @@ primaryClass = {%s}}"
 (defun biblio-arxiv--build-bibtex (metadata)
   "Create a BibTeX record for METADATA."
   (let-alist metadata
-    (message "Guessing a BibTeX entry for %S." .id)
+    (message "Auto-generating a BibTeX entry for %S." .id)
     (biblio-format-bibtex (biblio-arxiv--build-bibtex-1 metadata) t)))
 
 (defun biblio-arxiv--forward-bibtex (metadata forward-to)
