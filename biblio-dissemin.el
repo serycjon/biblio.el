@@ -57,7 +57,7 @@
     (biblio-with-fontification 'font-lock-doc-face
       (biblio-insert-with-prefix "   " .abstract))))
 
-(defun dissemin--translate-classification (classification)
+(defun biblio-dissemin--translate-classification (classification)
   "Translate Dissemin's CLASSIFICATION for display."
   (pcase classification
     (`"OA" "Available from the publisher")
@@ -73,7 +73,7 @@
      (list (cons 'title .title)
            (cons 'authors (seq-map #'biblio-dissemin--format-author .authors))
            (cons 'open-access-status
-                 (dissemin--translate-classification .classification)))
+                 (biblio-dissemin--translate-classification .classification)))
      t)
     (biblio-dissemin--insert-button .pdf_url "")
     (if (seq-empty-p .records)
@@ -102,7 +102,7 @@
   (decode-coding-region (point-min) (point-max) 'utf-8)
   (let-alist (json-read)
     (unless (string= .status "ok")
-      (warn "Dissemin query failed"))
+      (display-warning 'biblio-dissemin "Dissemin query failed"))
     .paper))
 
 (defun biblio-dissemin--url (doi)

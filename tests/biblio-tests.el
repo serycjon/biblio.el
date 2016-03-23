@@ -398,7 +398,7 @@ month={Apr}, pages={147–156}}")
               (expect #'biblio--selection-copy
                       :to-throw 'error '("No entry at point"))))))
 
-      (describe "--selection-extended-action"
+      (describe "--selection-extended-action for Dissemin"
         (before-each
           (spy-on 'biblio-completing-read-alist
                   :and-return-value #'biblio-dissemin--lookup-record)
@@ -450,9 +450,37 @@ month={Apr}, pages={147–156}}")
                     ("DBLP" . biblio-dblp-backend))
                   nil t)))))
 
+  (describe "In the Dissemin module"
+
+    (describe "-dissemin-parse-record"
+      (it "complains about non-ok statuses"
+        (expect (shut-up
+                  (with-temp-buffer
+                    (save-excursion (insert "{}"))
+                    (biblio-dissemin--parse-buffer))
+                  (shut-up-current-output))
+                :to-equal "Warning (biblio-dissemin): Dissemin query failed\n")))
+
+    (describe "-dissemin--translate-classification"
+      (it "lets unexpected classifications through"
+        (expect (biblio-dissemin--translate-classification 'argh)
+                :to-be 'argh)))
+
+    (describe "-dissemin--lookup-record"
+      (before-each
+        (spy-on #'biblio-dissemin-lookup))
+      (it "passes a DOI to -dissemin-lookup"
+        (let ((doi (make-symbol "AAA")))
+          (biblio-dissemin--lookup-record `((doi . ,doi)))
+          (expect #'biblio-dissemin-lookup :to-have-been-called-with doi)))
+      (it "complains if the record contains no DOI"
+        (expect (lambda () (biblio-dissemin--lookup-record nil))
+                :to-throw 'user-error '("Dissemin needs a DOI, but this record does not contain one"))
+        (expect #'biblio-dissemin-lookup :not :to-have-been-called))))
+
   (describe "In the arXiv module"
 
-    (describe "biblio-arxiv--extract-year"
+    (describe "--extract-year"
       (it "parses correct dates"
         (expect (biblio-arxiv--extract-year "2003-07-07T13:46:39")
                 :to-equal "2003")
@@ -642,11 +670,12 @@ instead."
   (describe "biblio-dissemin"
     (before-each
       (biblio-tests--intercept-url-requests))
-    (dolist (doi '("10.1145/1159890.806466" "10.1016/j.paid.2009.02.013" "10.1126/science.1157784"))
+
+    (dolist (doi '("http://doi.org/10.1145/1159890.806466" "10.1016/j.paid.2009.02.013" "10.1126/science.1157784"))
       (describe (format "(for DOI %S)" doi)
         :var (buf)
         (it "creates a results buffer properly"
-          (shut-up (setq buf (dissemin-lookup doi)))
+          (shut-up (setq buf (dissemin-lookup doi t)))
           (expect (buffer-live-p buf) :to-be-truthy)
           (expect (buffer-name buf) :to-match "Dissemin")
           (expect (buffer-size buf) :to-be-greater-than 0))
