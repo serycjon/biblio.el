@@ -30,6 +30,7 @@
   (undercover "*.el"))
 
 (require 'biblio)
+(require 'noflet)
 (require 'buttercup)
 (require 'notifications)
 
@@ -137,7 +138,13 @@ month={Apr}, pages={147–156}}")
                   :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean)))
         (it "replaces the “@data{” header"
           (expect (biblio-format-bibtex (concat "@data{" stallman-bibtex))
-                  :to-match "\\`@misc{")))
+                  :to-match "\\`@misc{"))
+        (it "uses font-lock-ensure when available"
+          (unless (functionp #'font-lock-ensure)
+            (let ((called-p t))
+              (noflet ((font-lock-ensure () (setq called-p t)))
+                (biblio-format-bibtex "")
+                (expect called-p :to-be-truthy))))))
 
       (describe "-response-as-utf8"
         (it "decodes Unicode characters properly"
