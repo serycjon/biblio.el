@@ -1,10 +1,10 @@
-;;; biblio-dissemin.el --- Lookup and import bibliographic information and open access records from Dissemin -*- lexical-binding: t -*-
+;;; biblio-dissemin.el --- Lookup bibliographic information and open access records from Dissemin -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
 ;; Author: Clément Pit-Claudel
 ;; Version: 0.1
-;; Package-Requires: ((biblio-core "0.0"))
+;; Package-Requires: ((emacs "24.3") (biblio-core "0.0"))
 ;; Keywords: bib, tex, convenience, hypermedia
 ;; URL: http://github.com/cpitclaudel/biblio.el
 
