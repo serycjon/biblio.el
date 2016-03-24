@@ -423,6 +423,15 @@ If QUIT is set, also kill the results buffer."
                    (funcall forward-to bibtex metadata))))
       (when quit (quit-window)))))
 
+(defun biblio--selection-change-buffer (buffer-name)
+  "Change buffer in which BibTeX results will be inserted.
+BUFFER-NAME is the name of the new target buffer."
+  (interactive (list (read-buffer "Buffer to insert entries into: ")))
+  (let ((buffer (get-buffer buffer-name)))
+    (if (buffer-local-value 'buffer-read-only buffer)
+        (user-error "%s is read-only" (buffer-name buffer))
+      (setq biblio--source-buffer buffer))))
+
 (defvar biblio-selection-mode-actions-alist nil
   "An alist of extensions for `biblio-selection-mode'.
 Each element should be in the for (LABEL . FUNCTION); FUNCTION
@@ -487,6 +496,7 @@ Interactively, query for ACTION from
     (define-key map (kbd "i") #'biblio--selection-insert)
     (define-key map (kbd "I") #'biblio--selection-insert-quit)
     (define-key map (kbd "C-y") #'biblio--selection-insert-quit)
+    (define-key map (kbd "b") #'biblio--selection-change-buffer)
     (define-key map (kbd "x") #'biblio--selection-extended-action)
     (define-key map (kbd "h") #'biblio--selection-help)
     (define-key map (kbd "?") #'biblio--selection-help)
@@ -597,7 +607,7 @@ space after the record."
 
 (defface biblio-results-header-face
   '((t :height 1.5 :weight bold :inherit font-lock-preprocessor-face))
-  "Hace used for general search results header in `biblio-selection-mode'."
+  "Face used for general search results header in `biblio-selection-mode'."
   :group 'biblio-faces)
 
 (defun biblio--search-results-header (&optional loading-p)

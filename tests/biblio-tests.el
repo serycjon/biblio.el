@@ -418,6 +418,24 @@ month={Apr}, pages={147–156}}")
               (expect #'biblio--selection-copy
                       :to-throw 'error '("No entry at point"))))))
 
+      (describe "a buffer change command"
+        :var (new-target)
+        (before-each
+          (setq new-target (get-buffer-create " *biblio-new-target*"))
+          (spy-on #'read-buffer :and-return-value (buffer-name new-target)))
+        (after-each
+          (kill-buffer new-target))
+        (it "changes the target buffer"
+          (with-current-buffer results-buffer
+            (call-interactively #'biblio--selection-change-buffer)
+            (expect biblio--source-buffer :to-equal new-target)))
+        (it "rejects read-only buffers"
+          (with-current-buffer results-buffer
+            (with-current-buffer new-target
+              (setq buffer-read-only t))
+            (expect (lambda () (call-interactively #'biblio--selection-change-buffer))
+                    :to-throw 'user-error))))
+
       (describe "--selection-extended-action for Dissemin"
         (before-each
           (spy-on 'biblio-completing-read-alist
