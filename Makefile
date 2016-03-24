@@ -18,3 +18,6 @@ test: clean # Must run clean to make tests work
 
 version:
 	$(CASK) exec $(EMACS) --version
+
+screenshots:
+	$(CASK) exec $(EMACS) -Q -L . -l etc/screenshots/biblio-screenshots.el --eval '(biblio-screenshots--do)'

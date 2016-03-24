@@ -9,5 +9,6 @@
 (depends-on "let-alist")
 
 (development
+ (depends-on "noflet")
  (depends-on "buttercup")
  (depends-on "undercover"))

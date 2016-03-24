@@ -1,12 +1,14 @@
-# `biblio.el`: An extensible Emacs package for browsing and fetching references
+# biblio.el: An extensible Emacs package for browsing and fetching references
 [![GPL 3](https://img.shields.io/badge/license-GPLv3-blue.svg)](COPYING)
 [![Build Status](https://travis-ci.org/cpitclaudel/biblio.el.svg?branch=master)](https://travis-ci.org/cpitclaudel/biblio.el)
 [![Coverage Status](https://coveralls.io/repos/github/cpitclaudel/biblio.el/badge.svg?branch=master)](https://coveralls.io/github/cpitclaudel/biblio.el?branch=master)
 <!-- [![MELPA](http://melpa.org/packages/biblio-badge.svg)](http://melpa.org/#/company-coq) -->
 
-`biblio.el` makes it easy to browse and gather bibliographic references and
+*biblio.el* makes it easy to browse and gather bibliographic references and
 publications from various sources, by keywords or by DOI.  References are
 automatically fetched from well-curated sources, and formatted as BibTeX.
+
+![Screenshot](etc/screenshots/biblio.el.png)
 
 ## Supported sources:
 
