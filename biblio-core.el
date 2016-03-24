@@ -43,6 +43,12 @@
   "Buffer from which a bibliographic search was started.
 This variable is local to each search results buffer.")
 
+(defvar-local biblio--search-terms nil
+  "Keywords that led to a page of bibliographic search results.")
+
+(defvar-local biblio--backend nil
+  "Backend that produced a page of bibliographic search results.")
+
 (defgroup biblio nil
   "A browser for bibliographic information."
   :group 'communication)
@@ -182,9 +188,10 @@ URL and CALLBACK; see `url-queue-retrieve'"
 
 (defun biblio-strip (str)
   "Remove spaces surrounding STR."
-  (->> str
-       (replace-regexp-in-string "[ \t\n\r]+\\'" "")
-       (replace-regexp-in-string "\\`[ \t\n\r]+" "")))
+  (when str
+    (->> str
+         (replace-regexp-in-string "[ \t\n\r]+\\'" "")
+         (replace-regexp-in-string "\\`[ \t\n\r]+" ""))))
 
 (defun biblio-cleanup-doi (doi)
   "Cleanup DOI string."
@@ -527,11 +534,17 @@ NEWLINE is non-nil, add a newline before the main text."
 
 (defun biblio--cleanup-field (text)
   "Cleanup TEXT for presentation to the user."
-  (when text (replace-regexp-in-string "[ \r\n\t]+" " " text)))
+  (when text (biblio-strip (replace-regexp-in-string "[ \r\n\t]+" " " text))))
 
 (defun biblio--prepare-authors (authors)
   "Cleanup and join list of AUTHORS."
-  (let ((authors (seq-remove #'seq-empty-p authors)))
+  (let* ((authors (biblio-remove-empty (seq-map #'biblio-strip authors)))
+         (num-authors (length authors))
+         (threshold 10))
+    (when (> num-authors threshold)
+      (let ((last (nthcdr threshold authors)))
+        (setcar last (format "… (%d more)" (- num-authors threshold)))
+        (setcdr last nil)))
     (if authors (biblio-join-1 ", " authors)
       "(no authors)")))
 
@@ -576,31 +589,51 @@ space after the record."
       (unless no-sep
         (insert "\n\n")))))
 
-(defun biblio--make-buffer (source-buffer backend-name)
-  "Find or create the results buffer for SOURCE-BUFFER and BACKEND-NAME."
+(defface biblio-results-header-face
+  '((t :height 1.5 :weight bold :inherit font-lock-preprocessor-face))
+  "Hace used for general search results header in `biblio-selection-mode'."
+  :group 'biblio-faces)
+
+(defun biblio--search-results-header (&optional loading-p)
+  "Compute a header for the current `selection-mode' buffer.
+With LOADING-P, mention that results are being loaded."
+  (format "%s search results for %s%s"
+          (funcall biblio--backend 'name)
+          (biblio--quote biblio--search-terms)
+          (if loading-p " (loading…)" "")))
+
+(defun biblio--make-results-buffer (source-buffer search-terms backend)
+  "Set up the results buffer for SOURCE-BUFFER, SEARCH-TERMS and BACKEND."
   (with-current-buffer (get-buffer-create
                         (format "*%s search started from %s*"
-                                backend-name
+                                (funcall backend 'name)
                                 (buffer-name source-buffer)))
     (let ((inhibit-read-only t))
       (erase-buffer)
       (biblio-selection-mode)
-      (setq buffer-read-only t)
       (setq biblio--source-buffer source-buffer)
+      (setq biblio--search-terms search-terms)
+      (setq biblio--backend backend)
+      (biblio--insert-header (biblio--search-results-header t))
+      (setq buffer-read-only t)
       (current-buffer))))
 
-(defun biblio--insert-results-1 (items)
-  "Populate current buffer with search results ITEMS."
+(defun biblio--insert-header (header)
+  "Prettify and insert HEADER in current buffer."
+  (when header
+    (biblio--with-text-property 'line-spacing 0.5
+      (biblio--with-text-property 'line-height 1.75
+        (biblio-with-fontification 'biblio-results-header-face
+          (insert header "\n"))))))
+
+(defun biblio-insert-results (items &optional header)
+  "Populate current buffer with ITEMS and HEADER, then display it."
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (seq-do #'biblio-insert-result items)))
-
-(defun biblio-insert-results (items)
-  "Populate current buffer with ITEMS, then display it."
-  (biblio--insert-results-1 items)
+    (biblio--insert-header header)
+    (seq-do #'biblio-insert-result items))
   (pop-to-buffer (current-buffer))
   (biblio--selection-first)
-  (message "Point is %S in buffer %S" (point) (current-buffer))
   (hl-line-highlight))
 
 (defun biblio--tag-backend (backend items)
@@ -615,8 +648,7 @@ Results are parsed with (BACKEND 'parse-buffer)."
      "Parse results of bibliographic search."
      (let ((results (biblio--tag-backend backend (funcall backend 'parse-buffer))))
        (with-current-buffer results-buffer
-         (biblio-insert-results results)
-         )
+         (biblio-insert-results results (biblio--search-results-header)))
        (message "Tip: learn to browse results with `h'")))))
 
 ;;; Searching
@@ -688,7 +720,7 @@ themselves to biblio-backends.")
 (defun biblio--lookup-1 (backend query)
   "Just like `biblio-lookup' on BACKEND, but use QUERY.
 Returns the buffer in which results will be inserted."
-  (let ((results-buffer (biblio--make-buffer (current-buffer) (funcall backend 'name))))
+  (let ((results-buffer (biblio--make-results-buffer (current-buffer) query backend)))
     (biblio-url-retrieve
      (funcall backend 'url query)
      (biblio--callback results-buffer backend))

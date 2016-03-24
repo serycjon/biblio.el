@@ -292,7 +292,8 @@ month={Apr}, pages={147–156}}")
       (before-each
         (shut-up
           (setq source-buffer (get-buffer-create " *source*"))
-          (setq results-buffer (biblio--make-buffer source-buffer "B"))
+          (setq results-buffer (biblio--make-results-buffer
+                                source-buffer "A" #'biblio-dblp-backend))
           (with-current-buffer source-buffer
             ;; This should be in an after-each (and it should include
             ;; -kill-buffers), but after-each is broken at the moment
@@ -301,7 +302,7 @@ month={Apr}, pages={147–156}}")
             (biblio-insert-results sample-items))))
 
       (describe "a local variable"
-        (it "tracks the  source buffer"
+        (it "tracks the source buffer"
           (expect (bufferp (buffer-local-value 'biblio--source-buffer
                                                results-buffer))
                   :to-be-truthy))
@@ -640,7 +641,12 @@ instead."
           (it "has at least one entry matching the entry regexp"
             (with-current-buffer results-buffer
               (expect (buffer-size) :to-be-greater-than 10)
-              (expect (biblio--selection-previous) :to-equal 3)))
+              (goto-char (point-min))
+              (expect (point) :not :to-equal (biblio--selection-next))
+              (expect (save-excursion
+                        (beginning-of-line)
+                        (looking-at-p biblio--search-result-marker-regexp))
+                      :to-be-truthy)))
           (it "has an entry with the right title"
             (with-current-buffer results-buffer
               (expect (looking-at-p first-result))))
