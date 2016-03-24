@@ -6,6 +6,7 @@ all: depends elc
 # Ignores failures, since dependences of ‘biblio’ are locally satisfied
 depends:
 	$(CASK) install || true
+	$(CASK) update || true
 
 elc:
 	$(CASK) build

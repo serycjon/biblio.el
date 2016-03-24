@@ -176,38 +176,40 @@ month={Apr}, pages={147–156}}")
                     :to-throw 'biblio--url-error 'timeout))))
 
       (describe "-generic-url-callback"
-        :var (source-buffer)
+        :var (url-buffer)
         (before-each
           (spy-on #'biblio-tests--dummy-callback :and-call-through)
           (spy-on #'biblio--dummy-cleanup-func)
-          (with-current-buffer (setq source-buffer (get-buffer-create " *url*"))
-            (erase-buffer) ;; FIXME use an after-each form instead
+          (with-current-buffer (setq url-buffer (get-buffer-create " *url*"))
             (insert "Some\npretty\nheaders\n\nAnd a response.")))
+        (after-each
+          (kill-buffer url-buffer)
+          (biblio-kill-buffers))
         (it "calls the cleanup function"
-          (with-current-buffer source-buffer
+          (with-current-buffer url-buffer
             (funcall (biblio-generic-url-callback
                       #'ignore #'biblio--dummy-cleanup-func)
                      nil))
           (expect #'biblio--dummy-cleanup-func :to-have-been-called))
         (it "invokes its callback in the right buffer"
-          (with-current-buffer source-buffer
+          (with-current-buffer url-buffer
             (expect (funcall (biblio-generic-url-callback
                               (lambda () (current-buffer)))
                              nil)
-                    :to-equal source-buffer)))
+                    :to-equal url-buffer)))
         (it "puts the point in the right spot"
-          (with-current-buffer source-buffer
+          (with-current-buffer url-buffer
             (expect (funcall (biblio-generic-url-callback
                               (lambda () (looking-at-p "And a response.")))
                              nil)
                     :to-be-truthy)))
         (it "always kills the source buffer"
-          (with-current-buffer source-buffer
+          (with-current-buffer url-buffer
             (funcall (biblio-generic-url-callback #'ignore) nil))
-          (expect (buffer-live-p source-buffer) :not :to-be-truthy))
+          (expect (buffer-live-p url-buffer) :not :to-be-truthy))
         (let ((errors '(:error (error http 406))))
           (it "stops when passed unexpected errors"
-            (with-current-buffer source-buffer
+            (with-current-buffer url-buffer
               (expect (shut-up
                         (funcall (biblio-generic-url-callback
                                   #'biblio-tests--dummy-callback)
@@ -216,15 +218,15 @@ month={Apr}, pages={147–156}}")
                       :to-match "\\`Error"))
             (expect #'biblio-tests--dummy-callback :not :to-have-been-called))
           (it "swallows invalid response bodies"
-            (with-temp-buffer
-              (expect (lambda () (shut-up
-                              (funcall (biblio-generic-url-callback
-                                        #'biblio-tests--dummy-callback #'ignore)
-                                       nil)))
-                      :not :to-throw))
-            (expect #'biblio-tests--dummy-callback :not :to-have-been-called))
+            (expect (lambda () (shut-up
+                            (funcall (biblio-generic-url-callback
+                                      #'biblio-tests--dummy-callback #'ignore)
+                                     nil)))
+                    :not :to-throw)
+            (expect #'biblio-tests--dummy-callback :not :to-have-been-called)
+            (expect (buffer-live-p url-buffer) :to-be-truthy))
           (it "forwards expected errors"
-            (with-current-buffer source-buffer
+            (with-current-buffer url-buffer
               (expect (funcall (biblio-generic-url-callback
                                 #'biblio-tests--dummy-callback #'ignore '(http . 406))
                                errors)
@@ -279,8 +281,8 @@ month={Apr}, pages={147–156}}")
         (kill-buffer temp-buf))
 
       (describe "--help-with-major-mode"
-        (it "produces a live buffer"
-          (expect (buffer-live-p doc-buf) :to-be-truthy))
+        (it (format "produces a live buffer")
+          (expect (buffer-live-p (get-buffer doc-buf)) :to-be-truthy))
         (it "shows bindings in order"
           (expect (with-current-buffer doc-buf
                     (and (search-forward "<up>" nil t)
@@ -294,12 +296,11 @@ month={Apr}, pages={147–156}}")
           (setq source-buffer (get-buffer-create " *source*"))
           (setq results-buffer (biblio--make-results-buffer
                                 source-buffer "A" #'biblio-dblp-backend))
-          (with-current-buffer source-buffer
-            ;; This should be in an after-each (and it should include
-            ;; -kill-buffers), but after-each is broken at the moment
-            (erase-buffer))
           (with-current-buffer results-buffer
             (biblio-insert-results sample-items))))
+      (after-each
+        (kill-buffer source-buffer)
+        (biblio-kill-buffers))
 
       (describe "a local variable"
         (it "tracks the source buffer"
