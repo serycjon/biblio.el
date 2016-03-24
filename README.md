@@ -12,7 +12,7 @@ automatically fetched from well-curated sources, and formatted as BibTeX.
 
 ## Supported sources:
 
-* `CrossRef`, an exhaustive academic search engine (recommended)
+* `CrossRef`, an exhaustive academic search engine
 * `arXiv`, an archive of pre-prints in various scientific fields
 * `DBLP`, a database of Computer Science publications
 * `doi.org`, a DOI resolver (to retrieve BibTeX records from DOIs)
