@@ -290,21 +290,21 @@ month={Apr}, pages={147–156}}")
                   :to-be-truthy))))
 
     (describe "in the interaction section,"
-      :var (source-buffer results-buffer)
+      :var (target-buffer results-buffer)
       (before-each
         (shut-up
-          (setq source-buffer (get-buffer-create " *source*"))
+          (setq target-buffer (get-buffer-create " *source*"))
           (setq results-buffer (biblio--make-results-buffer
-                                source-buffer "A" #'biblio-dblp-backend))
+                                target-buffer "A" #'biblio-dblp-backend))
           (with-current-buffer results-buffer
             (biblio-insert-results sample-items))))
       (after-each
-        (kill-buffer source-buffer)
+        (kill-buffer target-buffer)
         (biblio-kill-buffers))
 
       (describe "a local variable"
-        (it "tracks the source buffer"
-          (expect (bufferp (buffer-local-value 'biblio--source-buffer
+        (it "tracks the target buffer"
+          (expect (bufferp (buffer-local-value 'biblio--target-buffer
                                                results-buffer))
                   :to-be-truthy))
         (it "prevents writing"
@@ -404,13 +404,13 @@ month={Apr}, pages={147–156}}")
           (it "can insert bibtex records"
             (with-current-buffer results-buffer
               (shut-up (biblio--selection-insert))
-              (with-current-buffer source-buffer
+              (with-current-buffer target-buffer
                 (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
               (expect #'biblio-dblp-backend :to-have-been-called)))
           (it "can insert bibtex records and quit"
             (with-current-buffer results-buffer
               (shut-up (biblio--selection-insert-quit))
-              (with-current-buffer source-buffer
+              (with-current-buffer target-buffer
                 (expect (buffer-string) :to-equal (concat bibtex "\n\n")))
               (expect #'biblio-dblp-backend :to-have-been-called)))
           (it "complains about empty entries"
@@ -428,7 +428,7 @@ month={Apr}, pages={147–156}}")
         (it "changes the target buffer"
           (with-current-buffer results-buffer
             (call-interactively #'biblio--selection-change-buffer)
-            (expect biblio--source-buffer :to-equal new-target)))
+            (expect biblio--target-buffer :to-equal new-target)))
         (it "rejects read-only buffers"
           (with-current-buffer results-buffer
             (with-current-buffer new-target
@@ -471,10 +471,10 @@ month={Apr}, pages={147–156}}")
       (describe "the mode line"
         (it "mentions the target buffer"
           (with-current-buffer results-buffer
-            (let ((biblio--source-buffer (get-buffer-create " *biblio-dummy-target*")))
+            (let ((biblio--target-buffer (get-buffer-create " *biblio-dummy-target*")))
               (expect (biblio--selection-mode-name)
-                      :to-match (regexp-quote (buffer-name biblio--source-buffer)))
-              (kill-buffer biblio--source-buffer)))))
+                      :to-match (regexp-quote (buffer-name biblio--target-buffer)))
+              (kill-buffer biblio--target-buffer)))))
 
       (describe "-kill-buffers"
         (it "actually kills buffers"

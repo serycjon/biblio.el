@@ -121,10 +121,10 @@ FORWARD-TO is the callback to call with the results of the search."
 (defun doi-insert-bibtex (doi)
   "Insert BibTeX entry matching DOI."
   (interactive "MDOI: ")
-  (let ((source-buffer (current-buffer)))
+  (let ((target-buffer (current-buffer)))
     (biblio-doi-forward-bibtex
      (biblio-cleanup-doi doi)
-     (lambda (result) (biblio-doi--insert result source-buffer)))))
+     (lambda (result) (biblio-doi--insert result target-buffer)))))
 
 (provide 'biblio-doi)
 ;;; biblio-doi.el ends here

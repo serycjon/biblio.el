@@ -39,8 +39,8 @@
 
 ;;; Code:
 
-(defvar-local biblio--source-buffer nil
-  "Buffer from which a bibliographic search was started.
+(defvar-local biblio--target-buffer nil
+  "Buffer into which BibTeX entries should be inserted.
 This variable is local to each search results buffer.")
 
 (defvar-local biblio--search-terms nil
@@ -166,7 +166,7 @@ ALLOWED-ERRORS, CALLBACK is instead called with one argument, the
 list of alowed errors that occured instead of a buffer.  If the
 request returns another error, an exception is raised."
   (lambda (events)
-    (let ((source-buffer (current-buffer)))
+    (let ((target-buffer (current-buffer)))
       (unwind-protect
           (progn
             (funcall (or cleanup-function #'ignore))
@@ -179,7 +179,7 @@ request returns another error, an exception is raised."
                   (delete-region (point-min) (point))
                   (funcall callback))
               (error (message "Error while processing request: %S" err))))
-        (kill-buffer source-buffer)))))
+        (kill-buffer target-buffer)))))
 
 (defun biblio-url-retrieve (url callback)
   "Wrapper around `url-queue-retrieve'.
@@ -382,15 +382,15 @@ Uses .url, and .doi as a fallback."
   (interactive)
   (biblio--selection-forward-bibtex #'biblio--selection-copy-callback t))
 
-(defun biblio--source-window ()
+(defun biblio--target-window ()
   "Get the window of the source buffer."
-  (get-buffer-window biblio--source-buffer))
+  (get-buffer-window biblio--target-buffer))
 
 (defun biblio--selection-insert-callback (bibtex entry)
   "Add BIBTEX (from ENTRY) to kill ring."
-  (let ((source-buffer biblio--source-buffer))
-    (with-selected-window (or (biblio--source-window) (selected-window))
-      (with-current-buffer source-buffer
+  (let ((target-buffer biblio--target-buffer))
+    (with-selected-window (or (biblio--target-window) (selected-window))
+      (with-current-buffer target-buffer
         (insert bibtex "\n\n"))))
   (message "Inserted bibtex entry for %S."
            (biblio--prepare-title (biblio-alist-get 'title entry))))
@@ -430,7 +430,7 @@ BUFFER-NAME is the name of the new target buffer."
   (let ((buffer (get-buffer buffer-name)))
     (if (buffer-local-value 'buffer-read-only buffer)
         (user-error "%s is read-only" (buffer-name buffer))
-      (setq biblio--source-buffer buffer))))
+      (setq biblio--target-buffer buffer))))
 
 (defvar biblio-selection-mode-actions-alist nil
   "An alist of extensions for `biblio-selection-mode'.
@@ -509,9 +509,9 @@ Interactively, query for ACTION from
 (defun biblio--selection-mode-name ()
   "Compute a modeline string for `biblio-selection-mode'."
   (concat biblio--selection-mode-name-base
-          (if (bufferp biblio--source-buffer)
+          (if (bufferp biblio--target-buffer)
               (format " (→ %s)"
-                      (buffer-name biblio--source-buffer))
+                      (buffer-name biblio--target-buffer))
             "")))
 
 (define-derived-mode biblio-selection-mode fundamental-mode biblio--selection-mode-name-base
@@ -629,14 +629,14 @@ With LOADING-P, mention that results are being loaded."
           (biblio--quote biblio--search-terms)
           (if loading-p " (loading…)" "")))
 
-(defun biblio--make-results-buffer (source-buffer search-terms backend)
-  "Set up the results buffer for SOURCE-BUFFER, SEARCH-TERMS and BACKEND."
+(defun biblio--make-results-buffer (target-buffer search-terms backend)
+  "Set up the results buffer for TARGET-BUFFER, SEARCH-TERMS and BACKEND."
   (with-current-buffer (get-buffer-create
                         (format "*%s search*" (funcall backend 'name)))
     (let ((inhibit-read-only t))
       (erase-buffer)
       (biblio-selection-mode)
-      (setq biblio--source-buffer source-buffer)
+      (setq biblio--target-buffer target-buffer)
       (setq biblio--search-terms search-terms)
       (setq biblio--backend backend)
       (biblio--insert-header (biblio--search-results-header t))

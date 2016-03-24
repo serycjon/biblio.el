@@ -68,11 +68,11 @@
                                        (biblio-screenshots--url-retrieve-synchronously url)))
     (let* ((biblio-synchronous t)
            (biblio-authors-limit 5)
-           (source-buffer (get-buffer-create "bosons.bib"))
-           (results-buffer (with-current-buffer source-buffer
+           (target-buffer (get-buffer-create "bosons.bib"))
+           (results-buffer (with-current-buffer target-buffer
                              (biblio--lookup-1 #'biblio-arxiv-backend "higgs boson")))
            (dissemin-buffer nil))
-      (with-current-buffer source-buffer
+      (with-current-buffer target-buffer
         (bibtex-mode))
       (with-current-buffer results-buffer
         (dotimes (_ 2) (biblio--selection-next))
@@ -84,12 +84,12 @@
       (delete-other-windows)
       (let* ((results-window (selected-window))
              (dissemin-window (split-window-horizontally -62))
-             (source-window (with-selected-window dissemin-window
+             (target-window (with-selected-window dissemin-window
                               (split-window-vertically))))
-        (set-window-buffer source-window source-buffer)
+        (set-window-buffer target-window target-buffer)
         (set-window-buffer results-window results-buffer)
         (set-window-buffer dissemin-window dissemin-buffer)
-        (with-selected-window source-window
+        (with-selected-window target-window
           (goto-char (point-min))
           (setq truncate-lines t))))))
 
