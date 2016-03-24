@@ -53,9 +53,10 @@
     (biblio-dissemin--insert-button .pdf_url "   ")
     (unless (string= .pdf_url .splash_url)
       (biblio-dissemin--insert-button .splash_url "   "))
-    (insert "\n")
-    (biblio-with-fontification 'font-lock-doc-face
-      (biblio-insert-with-prefix "   " .abstract))))
+    (unless (seq-empty-p .abstract)
+      (insert "\n")
+      (biblio-with-fontification 'font-lock-doc-face
+        (biblio-insert-with-prefix "   " .abstract)))))
 
 (defun biblio-dissemin--translate-classification (classification)
   "Translate Dissemin's CLASSIFICATION for display."
@@ -75,7 +76,7 @@
            (cons 'open-access-status
                  (biblio-dissemin--translate-classification .classification)))
      t)
-    (biblio-dissemin--insert-button .pdf_url "")
+    (biblio-dissemin--insert-button .pdf_url "  ")
     (if (seq-empty-p .records)
         (insert "\n\n(no records)")
       (seq-do #'biblio-dissemin--insert-record .records))
