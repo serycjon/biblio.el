@@ -454,6 +454,17 @@ month={Apr}, pages={147–156}}")
           (biblio-kill-buffers)
           (expect (buffer-live-p results-buffer) :not :to-be-truthy))))
 
+    (describe "in the printing section,"
+
+      (describe "--prepare-authors"
+        (it "removes spaces"
+          (expect (biblio--prepare-authors '(" A " " B"))
+                  :to-equal "A, B"))
+        (it "obeys -authors-limit"
+          (let ((biblio-authors-limit 2))
+            (expect (biblio--prepare-authors '("A" "B" "C"))
+                    :to-equal "A, B, … (1 more)")))))
+
     (describe "in the searching section,"
 
       (describe "--select-backend"

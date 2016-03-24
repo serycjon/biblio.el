@@ -66,6 +66,11 @@ This variable is local to each search results buffer.")
   :group 'biblio-core
   :type 'boolean)
 
+(defcustom biblio-authors-limit 10
+  "Maximum number of authors to display per paper."
+  :group 'biblio-core
+  :type 'integer)
+
 ;;; Compatibility
 
 (defun biblio-alist-get (key alist)
@@ -428,7 +433,7 @@ will be called with the metadata of the current item.")
     completing-read-function))
 
 (defun biblio-completing-read (prompt collection &optional predicate require-match
-                                initial-input hist def inherit-input-method)
+                                      initial-input hist def inherit-input-method)
   "Complete using `biblio-completing-read-function'.
 PROMPT, COLLECTION, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
 HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
@@ -437,7 +442,7 @@ HIST, DEF, INHERIT-INPUT-METHOD: see `completing-read'."
                      initial-input hist def inherit-input-method)))
 
 (defun biblio-completing-read-alist (prompt collection &optional predicate require-match
-                                      initial-input hist def inherit-input-method)
+                                            initial-input hist def inherit-input-method)
   "Same as `biblio-completing-read', when COLLECTION in an alist.
 Complete with the `car's, and return the `cdr' of the result.
 PROMPT, COLLECTION, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
@@ -539,11 +544,10 @@ NEWLINE is non-nil, add a newline before the main text."
 (defun biblio--prepare-authors (authors)
   "Cleanup and join list of AUTHORS."
   (let* ((authors (biblio-remove-empty (seq-map #'biblio-strip authors)))
-         (num-authors (length authors))
-         (threshold 10))
-    (when (> num-authors threshold)
-      (let ((last (nthcdr threshold authors)))
-        (setcar last (format "… (%d more)" (- num-authors threshold)))
+         (num-authors (length authors)))
+    (when (> num-authors biblio-authors-limit)
+      (let ((last (nthcdr biblio-authors-limit authors)))
+        (setcar last (format "… (%d more)" (- num-authors biblio-authors-limit)))
         (setcdr last nil)))
     (if authors (biblio-join-1 ", " authors)
       "(no authors)")))
