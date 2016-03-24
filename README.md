@@ -54,10 +54,10 @@ list of results in `biblio-selection-mode`.  In that mode, use:
   dblp-lookup RET author:Lamport RET` (see more info about DBLP's syntax at
   <http://dblp.uni-trier.de/search/>)
 
-* To check whether an article is available online for example Stallman's paper
-  on EMACS, use `x` in the list of results.  This only works with CrossRef at
-  the moment.  For example: `M-x crossref-lookup RET emacs stallman RET`, then
-  press `o Dissemin RET`.
+* To check whether an article is freely available online, use `x` in the list of
+  results. For example `M-x crossref-lookup RET emacs stallman RET`, followed by
+  `x Dissemin RET` will help you find open access copies of Stallman's paper on
+  EMACS (spoiler: it's [here](http://hdl.handle.net/1721.1/5736)).
 
 ## Setup
 
