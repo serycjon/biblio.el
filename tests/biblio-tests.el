@@ -219,9 +219,9 @@ month={Apr}, pages={147–156}}")
             (expect #'biblio-tests--dummy-callback :not :to-have-been-called))
           (it "swallows invalid response bodies"
             (expect (lambda () (shut-up
-                            (funcall (biblio-generic-url-callback
-                                      #'biblio-tests--dummy-callback #'ignore)
-                                     nil)))
+                                 (funcall (biblio-generic-url-callback
+                                           #'biblio-tests--dummy-callback #'ignore)
+                                          nil)))
                     :not :to-throw)
             (expect #'biblio-tests--dummy-callback :not :to-have-been-called)
             (expect (buffer-live-p url-buffer) :to-be-truthy))
@@ -467,6 +467,14 @@ month={Apr}, pages={147–156}}")
               (funcall func "A" nil)
               (expect #'completing-read :to-have-been-called)
               (expect (biblio--completing-read-function) :to-be #'ignore)))))
+
+      (describe "the mode line"
+        (it "mentions the target buffer"
+          (with-current-buffer results-buffer
+            (let ((biblio--source-buffer (get-buffer-create " *biblio-dummy-target*")))
+              (expect (biblio--selection-mode-name)
+                      :to-match (regexp-quote (buffer-name biblio--source-buffer)))
+              (kill-buffer biblio--source-buffer)))))
 
       (describe "-kill-buffers"
         (it "actually kills buffers"

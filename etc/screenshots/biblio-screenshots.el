@@ -35,6 +35,9 @@
   (load-theme 'tango t)
   (set-face-attribute 'default nil :height 105)
   (set-face-attribute 'default nil :foreground "black")
+  (set-face-attribute 'mode-line nil :foreground "gray60" :background "black")
+  (set-face-attribute 'mode-line-inactive nil :foreground "gray60" :background "#404045")
+  (set-face-attribute 'mode-line-buffer-id nil :foreground "#eab700")
   (tool-bar-mode -1)
   (menu-bar-mode -1)
   (scroll-bar-mode -1)
@@ -43,7 +46,7 @@
   (blink-cursor-mode -1)
   (setq-default cursor-type nil
                 split-width-threshold 100
-                mode-line-format '(" " mode-line-buffer-identification))
+                mode-line-format '(" " mode-line-buffer-identification " " major-mode))
   (set-frame-size (selected-frame) 125 30))
 
 (defun biblio-screenshots--save-screenshot ()

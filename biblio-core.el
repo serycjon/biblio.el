@@ -504,14 +504,25 @@ Interactively, query for ACTION from
     map)
   "Keybindings for Bibliographic search results.")
 
-(define-derived-mode biblio-selection-mode fundamental-mode "Bibliographic search results"
+(defconst biblio--selection-mode-name-base "Bibliographic search results")
+
+(defun biblio--selection-mode-name ()
+  "Compute a modeline string for `biblio-selection-mode'."
+  (concat biblio--selection-mode-name-base
+          (if (bufferp biblio--source-buffer)
+              (format " (→ %s)"
+                      (buffer-name biblio--source-buffer))
+            "")))
+
+(define-derived-mode biblio-selection-mode fundamental-mode biblio--selection-mode-name-base
   "Browse bibliographic search results.
 \\{biblio-selection-mode-map}"
   (hl-line-mode)
   (visual-line-mode)
-  (setq truncate-lines nil)
+  (setq-local truncate-lines nil)
   (setq-local cursor-type nil)
-  (setq-local buffer-read-only t))
+  (setq-local buffer-read-only t)
+  (setq-local mode-name '(:eval (biblio--selection-mode-name))))
 
 ;;; Printing search results
 
@@ -621,9 +632,7 @@ With LOADING-P, mention that results are being loaded."
 (defun biblio--make-results-buffer (source-buffer search-terms backend)
   "Set up the results buffer for SOURCE-BUFFER, SEARCH-TERMS and BACKEND."
   (with-current-buffer (get-buffer-create
-                        (format "*%s search started from %s*"
-                                (funcall backend 'name)
-                                (buffer-name source-buffer)))
+                        (format "*%s search*" (funcall backend 'name)))
     (let ((inhibit-read-only t))
       (erase-buffer)
       (biblio-selection-mode)
