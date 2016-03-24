@@ -369,7 +369,8 @@ Uses .url, and .doi as a fallback."
 (defun biblio--selection-copy-callback (bibtex entry)
   "Add BIBTEX (from ENTRY) to kill ring."
   (kill-new bibtex)
-  (message "Killed bibtex entry for %S." (biblio-alist-get 'title entry)))
+  (message "Killed bibtex entry for %S."
+           (biblio--prepare-title (biblio-alist-get 'title entry))))
 
 (defun biblio--selection-copy ()
   "Copy BibTeX of current entry at point."
@@ -391,7 +392,8 @@ Uses .url, and .doi as a fallback."
     (with-selected-window (or (biblio--source-window) (selected-window))
       (with-current-buffer source-buffer
         (insert bibtex "\n\n"))))
-  (message "Inserted bibtex entry for %S." (biblio-alist-get 'title entry)))
+  (message "Inserted bibtex entry for %S."
+           (biblio--prepare-title (biblio-alist-get 'title entry))))
 
 (defun biblio--selection-insert ()
   "Insert BibTeX of current entry into source buffer."
