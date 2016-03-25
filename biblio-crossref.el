@@ -61,6 +61,7 @@
 
 (defun biblio-crossref--parse-search-results ()
   "Extract search results from CrossRef response."
+  (biblio-decode-url-buffer 'utf-8)
   (let-alist (json-read)
     (unless (string= .status "ok")
       (display-warning 'biblio-crossref "CrossRef query failed"))

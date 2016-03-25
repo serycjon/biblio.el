@@ -135,6 +135,11 @@ WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
   (set-buffer-multibyte t)
   (decode-coding-region (point) (point-max) 'utf-8 t))
 
+(defun biblio-decode-url-buffer (coding)
+  "Decode URL buffer with CODING."
+  (set-buffer-multibyte t) ;; URL buffer is unibyte
+  (decode-coding-region (point-min) (point-max) coding))
+
 (defun biblio--event-error-code (event)
   "Extract HTTP error code from EVENT, if any."
   (pcase event

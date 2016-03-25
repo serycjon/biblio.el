@@ -115,6 +115,7 @@ primaryClass = {%s}}"
 
 (defun biblio-arxiv--parse-search-results ()
   "Extract search results from arXiv response."
+  (biblio-decode-url-buffer 'utf-8)
   (let-alist (xml-parse-region (point-min) (point-max))
     (seq-map #'biblio-arxiv--extract-interesting-fields
              (seq-filter #'biblio-arxiv--entryp .feed))))

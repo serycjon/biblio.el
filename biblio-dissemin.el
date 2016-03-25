@@ -96,8 +96,7 @@
 
 (defun biblio-dissemin--parse-buffer ()
   "Extract search results from DBLP response."
-  (set-buffer-multibyte t) ;; URL buffer is unibyte
-  (decode-coding-region (point-min) (point-max) 'utf-8)
+  (biblio-decode-url-buffer 'utf-8)
   (let-alist (json-read)
     (unless (string= .status "ok")
       (display-warning 'biblio-dissemin "Dissemin query failed"))
