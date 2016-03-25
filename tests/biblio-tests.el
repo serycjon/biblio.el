@@ -513,7 +513,8 @@ month={Apr}, pages={147–156}}")
                   "Backend: "
                   '(("arXiv" . biblio-arxiv-backend)
                     ("CrossRef" . biblio-crossref-backend)
-                    ("DBLP" . biblio-dblp-backend))
+                    ("DBLP" . biblio-dblp-backend)
+                    ("HAL" . biblio-hal-backend))
                   nil t)))
 
       (describe "-lookup"
@@ -549,6 +550,17 @@ month={Apr}, pages={147–156}}")
                     (biblio-dblp--parse-search-results))
                   (shut-up-current-output))
                 :to-equal "Warning (biblio-dblp): DBLP query failed\n"))))
+
+  (describe "In the HAL module"
+
+    (describe "-hal--parse-search-results"
+      (it "complains about missing results"
+        (expect (shut-up
+                  (with-temp-buffer
+                    (save-excursion (insert "{}"))
+                    (biblio-hal--parse-search-results))
+                  (shut-up-current-output))
+                :to-equal "Warning (biblio-hal): HAL query failed\n"))))
 
   (describe "In the Dissemin module"
 
@@ -601,6 +613,7 @@ month={Apr}, pages={147–156}}")
 (defconst biblio-tests--feature-tests
   '((crossref "renear -ontologies" "Strategic Reading" biblio-crossref-backend)
     (dblp "author:lamport" "Who builds a house" biblio-dblp-backend)
+    (hal "coq inria" "The Coq Proof Assistant" biblio-hal-backend)
     (arxiv "all:electron" "Impact of Electron-Electron Cusp" biblio-arxiv-backend)))
 
 (defun biblio-tests--cache-file-path (fname)

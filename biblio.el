@@ -1,4 +1,4 @@
-;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, and doi.org -*- lexical-binding: t -*-
+;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, HAL, Dissemin, and doi.org -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
@@ -33,6 +33,7 @@
 ;; * ‘CrossRef’, an exhaustive academic search engine (recommended)
 ;; * ‘arXiv’, an archive of pre-prints in various scientific fields
 ;; * ‘DBLP’, a database of Computer Science publications
+;; * ‘HAL’, a French repository of Open Access publications
 ;; * ‘doi.org’, a DOI resolver (to retrieve BibTeX records from DOIs)
 ;; * ‘CrossCite’, an alternative DOI resolver and BibTeX formatting service
 ;; * ‘Dissemin’, a database tracking the open access status of scholarly articles
@@ -87,6 +88,7 @@
 (require 'biblio-arxiv)
 (require 'biblio-crossref)
 (require 'biblio-dblp)
+(require 'biblio-hal)
 (require 'biblio-dissemin)
 
 (provide 'biblio)
