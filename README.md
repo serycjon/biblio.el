@@ -1,8 +1,8 @@
 # biblio.el: An extensible Emacs package for browsing and fetching references
 [![GPL 3](https://img.shields.io/badge/license-GPLv3-blue.svg)](COPYING)
+[![MELPA](http://melpa.org/packages/biblio-badge.svg)](http://melpa.org/#/biblio)
 [![Build Status](https://travis-ci.org/cpitclaudel/biblio.el.svg?branch=master)](https://travis-ci.org/cpitclaudel/biblio.el)
 [![Coverage Status](https://coveralls.io/repos/github/cpitclaudel/biblio.el/badge.svg?branch=master)](https://coveralls.io/github/cpitclaudel/biblio.el?branch=master)
-<!-- [![MELPA](http://melpa.org/packages/biblio-badge.svg)](http://melpa.org/#/company-coq) -->
 
 *biblio.el* makes it easy to browse and gather bibliographic references and
 publications from various sources, by keywords or by DOI.  References are
@@ -55,7 +55,7 @@ list of results in `biblio-selection-mode`.  In that mode, use:
   <http://dblp.uni-trier.de/search/>)
 
 * To check whether an article is freely available online, use `x` in the list of
-  results. For example `M-x crossref-lookup RET emacs stallman RET`, followed by
+  results.  For example `M-x crossref-lookup RET emacs stallman RET` followed by
   `x Dissemin RET` will help you find open access copies of Stallman's paper on
   EMACS (spoiler: it's [here](http://hdl.handle.net/1721.1/5736)).
 
