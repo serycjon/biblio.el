@@ -425,7 +425,7 @@ If QUIT is set, also kill the results buffer."
                'forward-bibtex metadata
                (lambda (bibtex)
                  (with-current-buffer results-buffer
-                   (funcall forward-to bibtex metadata))))
+                   (funcall forward-to (biblio-format-bibtex bibtex) metadata))))
       (when quit (quit-window)))))
 
 (defun biblio--selection-change-buffer (buffer-name)
