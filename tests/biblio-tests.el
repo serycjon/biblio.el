@@ -493,8 +493,10 @@ month={Apr}, pages={147–156}}")
                   :to-equal "A, B"))
         (it "obeys -authors-limit"
           (let ((biblio-authors-limit 2))
-            (expect (biblio--prepare-authors '("A" "B" "C"))
-                    :to-equal "A, B, … (1 more)")))))
+            (expect (biblio--prepare-authors '("A" "B" "C" "D"))
+                    :to-equal "A, B, C, D")
+            (expect (biblio--prepare-authors '("A" "B" "C" "D" "E"))
+                    :to-equal "A, B, … (3 more)")))))
 
     (describe "in the searching section,"
 

@@ -568,8 +568,9 @@ NEWLINE is non-nil, add a newline before the main text."
   "Cleanup and join list of AUTHORS."
   (let* ((authors (biblio-remove-empty (seq-map #'biblio-strip authors)))
          (num-authors (length authors)))
-    (when (> num-authors biblio-authors-limit)
-      (let ((last (nthcdr biblio-authors-limit authors)))
+    ;; Only truncate when significantly above limit
+    (when (> num-authors (+ 2 biblio-authors-limit))
+      (let* ((last (nthcdr biblio-authors-limit authors)))
         (setcar last (format "… (%d more)" (- num-authors biblio-authors-limit)))
         (setcdr last nil)))
     (if authors (biblio-join-1 ", " authors)
