@@ -49,7 +49,7 @@
   (setq-default cursor-type nil
                 split-width-threshold 100
                 mode-line-format '(" " mode-line-buffer-identification " " mode-name))
-  (set-frame-size (selected-frame) 125 30))
+  (set-frame-size (selected-frame) 128 30))
 
 (defun biblio-screenshots--save-screenshot ()
   "Save screenshot of current frame."
@@ -85,7 +85,7 @@
         (biblio--selection-insert))
       (delete-other-windows)
       (let* ((results-window (selected-window))
-             (dissemin-window (split-window-horizontally -62))
+             (dissemin-window (split-window-horizontally -65))
              (target-window (with-selected-window dissemin-window
                               (split-window-vertically))))
         (set-window-buffer target-window target-buffer)
