@@ -22,3 +22,6 @@ version:
 
 screenshots:
 	$(CASK) exec $(EMACS) -Q -L . -l etc/screenshots/biblio-screenshots.el --eval '(biblio-screenshots--do)'
+
+pkg-file:
+	$(CASK) pkg-file

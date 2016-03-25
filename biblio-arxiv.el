@@ -2,10 +2,7 @@
 
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
-;; Author: Clément Pit-Claudel
-;; Version: 0.1
-;; Package-Requires: ((emacs "24.3") (biblio-core "0.0") (biblio-doi "0.0"))
-;; Keywords: bib, tex, convenience, hypermedia
+;; Author: Clément Pit-Claudel <clement.pitclaudel@live.com>
 ;; URL: http://github.com/cpitclaudel/biblio.el
 
 ;; This program is free software; you can redistribute it and/or modify

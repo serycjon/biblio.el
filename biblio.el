@@ -1,10 +1,10 @@
-;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, doi.org etc. -*- lexical-binding: t -*-
+;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, and doi.org -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
-;; Author: Clément Pit-Claudel
+;; Author: Clément Pit-Claudel <clement.pitclaudel@live.com>
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24.3") (biblio-core "0.0") (biblio-doi "0.0") (biblio-arxiv "0.0") (biblio-dblp "0.0") (biblio-crossref "0.0") (biblio-dissemin "0.0"))
+;; Package-Requires: ((emacs "24.3") (biblio-core "0.0"))
 ;; Keywords: bib, tex, convenience, hypermedia
 ;; URL: http://github.com/cpitclaudel/biblio.el
 
