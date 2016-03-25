@@ -98,28 +98,32 @@ Return an alist of the property-value pairs in PLIST."
 See `bibtex-entry-format' for details; this list is all
 transformations, except errors for missing fields.")
 
-(defun biblio--cleanup-bibtex (autokey)
+(defun biblio--cleanup-bibtex (dialect autokey)
   "Cleanup BibTeX entry starting at point.
-AUTOKEY: see `biblio-format-bibtex'."
+DIALECT is `BibTeX' or `biblatex'.  AUTOKEY: see `biblio-format-bibtex'."
   (let ((bibtex-entry-format biblio-bibtex-entry-format)
         (bibtex-align-at-equal-sign t)
         (bibtex-autokey-edit-before-use nil)
         (bibtex-autokey-year-title-separator ":"))
-    (ignore-errors ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
-      (bibtex-clean-entry autokey))))
+    ;; Use biblatex to allow for e.g. @Online
+    ;; Use BibTeX to allow for e.g. @TechReport
+    (bibtex-set-dialect dialect)
+    (bibtex-clean-entry autokey)))
 
 (defun biblio-format-bibtex (bibtex &optional autokey)
   "Format BIBTEX entry.
 WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
   (with-temp-buffer
     (bibtex-mode)
-    (bibtex-set-dialect 'biblatex) ;; Use biblatex to allow for e.g. @Online
     (save-excursion
       (insert (biblio-strip bibtex)))
     (save-excursion
       (when (search-forward "@data{" nil t)
         (replace-match "@misc{")))
-    (biblio--cleanup-bibtex autokey)
+    (ignore-errors ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
+      (condition-case _
+          (biblio--cleanup-bibtex 'biblatex autokey)
+        (error (biblio--cleanup-bibtex 'BibTeX autokey))))
     (if (fboundp 'font-lock-ensure) (font-lock-ensure)
       (with-no-warnings (font-lock-fontify-buffer)))
     (buffer-string)))

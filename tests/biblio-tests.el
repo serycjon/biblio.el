@@ -136,6 +136,9 @@ month={Apr}, pages={147–156}}")
         (it "replaces the “@data{” header"
           (expect (biblio-format-bibtex (concat "@data{" stallman-bibtex))
                   :to-match "\\`@misc{"))
+        (it "falls back to BibTeX if entry isn't BibLaTeX"
+          (expect (biblio-format-bibtex (concat "@techreport{" stallman-bibtex))
+                  :to-match "\\`@TechReport{"))
         (it "uses font-lock-ensure when available"
           (unless (functionp #'font-lock-ensure)
             (let ((called-p t))
@@ -388,7 +391,7 @@ month={Apr}, pages={147–156}}")
             (push-button (point))
             (expect 'browse-url :to-have-been-called))))
 
-      (let ((bibtex "@article{empty}"))
+      (let ((bibtex "@Article{empty\n}"))
         (describe "a selection command"
           (before-each
             (spy-on #'biblio-dblp-backend
