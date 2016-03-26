@@ -64,8 +64,16 @@
     (`"CLOSED" "Subject to a restrictive sharing policy")
     (_ classification)))
 
-(defun biblio-dissemin--pretty-print (paper)
-  "Pretty-print a Dissemin PAPER entry to current buffer."
+(defun biblio-dissemin--suggest-upload (doi)
+  "Insert a link to Dissemin's upload page for DOI."
+  (insert "\n\nDid you write this paper? ")
+  (biblio-with-fontification '(:weight bold)
+    (insert
+     (biblio-make-url-button (format "http://dissem.in/%s" doi) "upload it")))
+  (insert "!\n"))
+
+(defun biblio-dissemin--pretty-print (paper doi)
+  "Pretty-print a Dissemin PAPER entry (with DOI) to current buffer."
   (let-alist paper
     (biblio-insert-result
      (list (cons 'title .title)
@@ -75,18 +83,20 @@
      t)
     (biblio-dissemin--insert-button .pdf_url "  ")
     (if (seq-empty-p .records)
-        (insert "\n\n(no records)")
+        (progn (insert "\n\n(no records)")
+               (when (member .classification '("OA" "OK"))
+                 (biblio-dissemin--suggest-upload doi)))
       (seq-do #'biblio-dissemin--insert-record .records))
     (goto-char (point-min))))
 
-(defun biblio-dissemin--print-results (paper)
-  "Create a buffer for Dissemin, and print PAPER into it."
+(defun biblio-dissemin--print-results (paper doi)
+  "Create a buffer for Dissemin, and print PAPER (with DOI) into it."
   (with-current-buffer (biblio-dissemin--make-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (help-mode)
       (visual-line-mode)
-      (biblio-dissemin--pretty-print paper))
+      (biblio-dissemin--pretty-print paper doi))
     (setq buffer-read-only t)
     (pop-to-buffer (current-buffer))))
 
@@ -106,9 +116,10 @@
   "Create a DBLP url to look up DOI."
   (format "http://dissem.in/api/%s" (url-encode-url doi)))
 
-(defun biblio-dissemin--callback () ;; no allowed errors, so no arguments
-  "Parse results returned by Dissemin."
-  (biblio-dissemin--print-results (biblio-dissemin--parse-buffer)))
+(defun biblio-dissemin--callback (doi)
+  "Generate a callback to parse Dissemin results for DOI."
+  (lambda () ;; no allowed errors, so no arguments
+    (biblio-dissemin--print-results (biblio-dissemin--parse-buffer) doi)))
 
 ;;;###autoload
 (defun biblio-dissemin-lookup (doi &optional cleanup)
@@ -120,7 +131,7 @@ Interactively, or if CLEANUP is non-nil, pass DOI through
     (setq doi (biblio-cleanup-doi doi)))
   (let ((buf (biblio-dissemin--make-buffer)))
     (biblio-url-retrieve (biblio-dissemin--url doi)
-                         (biblio-generic-url-callback #'biblio-dissemin--callback))
+                         (biblio-generic-url-callback (biblio-dissemin--callback doi)))
     buf))
 
 ;;;###autoload
@@ -137,7 +148,7 @@ RECORD is a formatted record as expected by `biblio-lookup'."
 (defun biblio-dissemin--register-action ()
   "Add Dissemin to list of `biblio-selection-mode' actions."
   (add-to-list 'biblio-selection-mode-actions-alist
-               '("Dissemin" . biblio-dissemin--lookup-record)))
+               '("Dissemin (find open access copies of this article)" . biblio-dissemin--lookup-record)))
 
 ;;;###autoload
 (add-hook 'biblio-selection-mode-hook #'biblio-dissemin--register-action)

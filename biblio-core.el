@@ -592,13 +592,15 @@ NEWLINE is non-nil, add a newline before the main text."
 
 (defun biblio--browse-url (button)
   "Open web browser on page pointed to by BUTTON."
-  (browse-url (button-label button)))
+  (browse-url (button-get button 'target)))
 
-(defun biblio-make-url-button (url)
-  "Make a text button pointing to URL."
+(defun biblio-make-url-button (url &optional label)
+  "Make a text button pointing to URL.
+With non-nil LABEL, use that instead of URL to label the button."
   (unless (seq-empty-p url)
     (with-temp-buffer
-      (insert-text-button url
+      (insert-text-button (or label url)
+                          'target url
                           'follow-link t
                           'action #'biblio--browse-url)
       (buffer-string))))
