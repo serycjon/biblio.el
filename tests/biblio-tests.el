@@ -503,11 +503,11 @@ month={Apr}, pages={147–156}}")
 
     (describe "in the searching section,"
 
-      (describe "--select-backend"
+      (describe "--read-backend"
         (before-each
           (spy-on #'biblio-completing-read-alist))
         (it "offers all backends"
-          (biblio--select-backend)
+          (biblio--read-backend)
           (expect #'biblio-completing-read-alist
                   :to-have-been-called-with
                   "Backend: "
@@ -517,17 +517,26 @@ month={Apr}, pages={147–156}}")
                     ("HAL" . biblio-hal-backend))
                   nil t)))
 
+      (describe "--read-query"
+        (before-each
+          (spy-on #'read-string))
+        (it "asks for a query"
+          (biblio--read-query #'biblio-dblp-backend)
+          (expect #'read-string :to-have-been-called)))
+
       (describe "-lookup"
         (before-each
           (spy-on #'biblio--lookup-1)
-          (spy-on #'biblio--select-backend :and-return-value #'biblio-dblp-backend)
-          (spy-on #'read-string :and-return-value "query"))
+          (spy-on #'biblio--read-backend :and-return-value #'biblio-dblp-backend)
+          (spy-on #'biblio--read-query :and-return-value "query"))
         (it "interactively prompts for a backend"
           (call-interactively #'biblio-lookup)
-          (expect #'biblio--select-backend :to-have-been-called))
-        (it "asks for a query string"
+          (expect #'biblio--read-backend :to-have-been-called))
+        (it "interactively prompts for a query string"
           (call-interactively #'biblio-lookup)
-          (expect #'read-string :to-have-been-called)
+          (expect #'biblio--read-query :to-have-been-called-with #'biblio-dblp-backend))
+        (it "passes the backend and the query string to --lookup-1"
+          (call-interactively #'biblio-lookup)
           (expect #'biblio--lookup-1 :to-have-been-called-with #'biblio-dblp-backend "query")))))
 
   (describe "In the CrossRef module"

@@ -750,13 +750,18 @@ themselves to biblio-backends.")
   "Collect an alist of (NAME . BACKEND)."
   (seq-map (lambda (b) (cons (funcall b 'name) b)) (biblio-collect-backends)))
 
-(defun biblio--select-backend ()
-  "Run `biblio-init-hook', then pick a backend from `biblio-backend'."
+(defun biblio--read-backend ()
+  "Run `biblio-init-hook', then read a backend from `biblio-backend'."
   (biblio-completing-read-alist "Backend: " (biblio--named-backends) nil t))
 
+(defun biblio--read-query (backend)
+  "Interactively read a query.
+Get prompt string from BACKEND."
+  (let* ((prompt (funcall backend 'prompt)))
+    (read-string prompt nil 'biblio--search-history)))
+
 (defun biblio--lookup-1 (backend query)
-  "Just like `biblio-lookup' on BACKEND, but use QUERY.
-Returns the buffer in which results will be inserted."
+  "Just like `biblio-lookup' on BACKEND and QUERY, but never prompt."
   (let ((results-buffer (biblio--make-results-buffer (current-buffer) query backend)))
     (biblio-url-retrieve
      (funcall backend 'url query)
@@ -764,14 +769,16 @@ Returns the buffer in which results will be inserted."
     results-buffer))
 
 ;;;###autoload
-(defun biblio-lookup (backend)
-  "Perform a search using BACKEND, prompting for a query.
-BACKEND should be a function obeying the interface described in
-the docstring of `biblio-backends'."
-  (interactive (list (biblio--select-backend)))
-  (biblio--lookup-1 backend
-              (let* ((prompt (funcall backend 'prompt)))
-                (read-string prompt nil 'biblio--search-history))))
+(defun biblio-lookup (&optional backend query)
+  "Perform a search using BACKEND, and QUERY.
+Prompt for any missing or nil arguments.  BACKEND should be a
+function obeying the interface described in the docstring of
+`biblio-backends'.  Returns the buffer in which results will be
+inserted."
+  (interactive)
+  (unless backend (setq backend (biblio--read-backend)))
+  (unless query (setq query (biblio--read-query backend)))
+  (biblio--lookup-1 backend query))
 
 (defun biblio-kill-buffers ()
   "Kill all `biblio-selection-mode' buffers."
