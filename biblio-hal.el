@@ -91,10 +91,10 @@ COMMAND, ARG, MORE: See `biblio-backends'."
 (add-hook 'biblio-init-hook #'biblio-hal-backend)
 
 ;;;###autoload
-(defun biblio-hal-lookup ()
-  "Start a HAL search."
+(defun biblio-hal-lookup (&optional query)
+  "Start a HAL search for QUERY, prompting if needed."
   (interactive)
-  (biblio-lookup #'biblio-hal-backend))
+  (biblio-lookup #'biblio-hal-backend query))
 
 ;;;###autoload
 (defalias 'hal-lookup 'biblio-hal-lookup)
