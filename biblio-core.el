@@ -24,7 +24,8 @@
 ;;; Commentary:
 ;; A framework for browsing bibliographic search results.  This is the core
 ;; package; for user interfaces, see any of `biblio-crossref', `biblio-dblp',
-;; `biblio-doi', and `biblio-dissemin', and the more general `biblio' package.
+;; `biblio-doi', `biblio-hal' and `biblio-dissemin', which are part of the
+;; `biblio' package.
 
 (require 'bibtex)
 (require 'browse-url)
@@ -719,8 +720,8 @@ results.
 Produce a BibTeX record from METADATA (one of the elements of the
 list produced by `parse-buffer') and call FORWARD-TO on it.
 
-For examples of backends, see one of `biblio-crossref-backend'
-and `biblio-dblp-backend'.
+For examples of backends, see one of `biblio-crossref-backend',
+`biblio-dblp-backend', `biblio-arxiv-backend', etc.
 
 
 To register your backend automatically, you may want to add a

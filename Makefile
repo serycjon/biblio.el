@@ -14,7 +14,7 @@ elc:
 clean:
 	$(CASK) clean-elc
 
-test: clean # Must run clean to make tests work
+test: clean # Must run clean to make uncover.el work
 	$(CASK) exec buttercup -L . -L tests
 
 version:
