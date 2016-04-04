@@ -805,6 +805,7 @@ inserted."
 
 ;; Local Variables:
 ;; nameless-current-name: "biblio"
+;; checkdoc-arguments-in-order-flag: nil
 ;; End:
 
 (provide 'biblio-core)
