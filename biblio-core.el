@@ -532,7 +532,20 @@ Interactively, query for ACTION from
   (setq-local truncate-lines nil)
   (setq-local cursor-type nil)
   (setq-local buffer-read-only t)
-  (setq-local mode-name '(:eval (biblio--selection-mode-name))))
+  (setq-local mode-name '(:eval (biblio--selection-mode-name)))
+  (setq-local
+   header-line-format
+   `(:eval
+     (concat
+      (ignore-errors
+        (propertize " " 'display '(space :align-to 0) 'face 'fringe))
+      (substitute-command-keys
+       (biblio-join "   "
+         "\\[biblio--selection-help]: Help"
+         "\\[biblio--selection-insert],\\[biblio--selection-insert-quit]: Insert BibTex"
+         "\\[biblio--selection-copy],\\[biblio--selection-copy-quit]: Copy BibTeX"
+         "\\[biblio--selection-extended-action]: Extended action"
+         "\\[biblio--selection-change-buffer]: Change target buffer"))))))
 
 ;;; Printing search results
 
