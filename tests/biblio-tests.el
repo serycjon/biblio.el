@@ -139,6 +139,10 @@ month={Apr}, pages={147–156}}")
         (it "falls back to BibTeX if entry isn't BibLaTeX"
           (expect (biblio-format-bibtex (concat "@techreport{" stallman-bibtex))
                   :to-match "\\`@TechReport{"))
+        (it "handles a nil format-function"
+          (let ((biblio-cleanup-bibtex-function nil))
+            (expect (biblio-format-bibtex (concat "@techreport{" stallman-bibtex))
+                    :to-equal (concat "@techreport{" stallman-bibtex))))
         (it "doesn't set the BibTeX dialect globally"
           (with-temp-buffer
             (bibtex-mode)

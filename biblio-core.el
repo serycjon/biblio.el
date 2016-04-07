@@ -91,18 +91,19 @@ Return an alist of the property-value pairs in PLIST."
 
 ;;; Utilities
 
-(defvar biblio-bibtex-entry-format
-  '(opts-or-alts numerical-fields page-dashes whitespace
-                 inherit-booktitle realign last-comma delimiters
-                 unify-case braces strings sort-fields)
+(defconst biblio--bibtex-entry-format
+  (list 'opts-or-alts 'numerical-fields 'page-dashes 'whitespace
+        'inherit-booktitle 'realign 'last-comma 'delimiters
+        'unify-case 'braces 'strings 'sort-fields)
   "Format to use in `biblio-format-bibtex'.
 See `bibtex-entry-format' for details; this list is all
-transformations, except errors for missing fields.")
+transformations, except errors for missing fields.
+Also see `biblio-cleanup-bibtex-function'.")
 
-(defun biblio--cleanup-bibtex (dialect autokey)
+(defun biblio--cleanup-bibtex-1 (dialect autokey)
   "Cleanup BibTeX entry starting at point.
 DIALECT is `BibTeX' or `biblatex'.  AUTOKEY: see `biblio-format-bibtex'."
-  (let ((bibtex-entry-format biblio-bibtex-entry-format)
+  (let ((bibtex-entry-format biblio--bibtex-entry-format)
         (bibtex-align-at-equal-sign t)
         (bibtex-autokey-edit-before-use nil)
         (bibtex-autokey-year-title-separator ":"))
@@ -111,20 +112,36 @@ DIALECT is `BibTeX' or `biblatex'.  AUTOKEY: see `biblio-format-bibtex'."
     (bibtex-set-dialect dialect t)
     (bibtex-clean-entry autokey)))
 
+(defun biblio--cleanup-bibtex (autokey)
+  "Default balue of `biblio-cleanup-bibtex-function'.
+AUTOKEY: See biblio-format-bibtex."
+  (save-excursion
+    (when (search-forward "@data{" nil t)
+      (replace-match "@misc{")))
+  (ignore-errors ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
+    (condition-case _
+        (biblio--cleanup-bibtex-1 'biblatex autokey)
+      (error (biblio--cleanup-bibtex-1 'BibTeX autokey)))))
+
+(defcustom biblio-cleanup-bibtex-function
+  #'biblio--cleanup-bibtex
+  "Function to clean up BibTeX entries.
+This function is called in a `bibtex-mode' buffer containing an
+unprocessed, potentially invalid BibTeX (or BibLaTeX) entry, and
+should clean it up in place.  It should take a single argument,
+AUTOKEY, indicating whether the entry needs a new key."
+  :group 'biblio
+  :type 'function)
+
 (defun biblio-format-bibtex (bibtex &optional autokey)
   "Format BIBTEX entry.
-WIth non-nil AUTOKEY, automatically generate a key for BIBTEX."
+With non-nil AUTOKEY, automatically generate a key for BIBTEX."
   (with-temp-buffer
     (bibtex-mode)
     (save-excursion
       (insert (biblio-strip bibtex)))
-    (save-excursion
-      (when (search-forward "@data{" nil t)
-        (replace-match "@misc{")))
-    (ignore-errors ;; See https://github.com/crosscite/citeproc-doi-server/issues/12
-      (condition-case _
-          (biblio--cleanup-bibtex 'biblatex autokey)
-        (error (biblio--cleanup-bibtex 'BibTeX autokey))))
+    (when (functionp biblio-cleanup-bibtex-function)
+      (funcall biblio-cleanup-bibtex-function autokey))
     (if (fboundp 'font-lock-ensure) (font-lock-ensure)
       (with-no-warnings (font-lock-fontify-buffer)))
     (buffer-string)))
