@@ -27,6 +27,8 @@
 ;; `biblio-doi', `biblio-hal' and `biblio-dissemin', which are part of the
 ;; `biblio' package.
 
+;;; Code:
+
 (require 'bibtex)
 (require 'browse-url)
 (require 'hl-line)
@@ -37,8 +39,6 @@
 (require 'dash)
 (require 'let-alist)
 (require 'seq)
-
-;;; Code:
 
 (defvar-local biblio--target-buffer nil
   "Buffer into which BibTeX entries should be inserted.
