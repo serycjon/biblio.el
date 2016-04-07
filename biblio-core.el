@@ -108,7 +108,7 @@ DIALECT is `BibTeX' or `biblatex'.  AUTOKEY: see `biblio-format-bibtex'."
         (bibtex-autokey-year-title-separator ":"))
     ;; Use biblatex to allow for e.g. @Online
     ;; Use BibTeX to allow for e.g. @TechReport
-    (bibtex-set-dialect dialect)
+    (bibtex-set-dialect dialect t)
     (bibtex-clean-entry autokey)))
 
 (defun biblio-format-bibtex (bibtex &optional autokey)

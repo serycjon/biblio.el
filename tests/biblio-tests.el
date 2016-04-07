@@ -139,6 +139,12 @@ month={Apr}, pages={147–156}}")
         (it "falls back to BibTeX if entry isn't BibLaTeX"
           (expect (biblio-format-bibtex (concat "@techreport{" stallman-bibtex))
                   :to-match "\\`@TechReport{"))
+        (it "doesn't set the BibTeX dialect globally"
+          (with-temp-buffer
+            (bibtex-mode)
+            (let ((bibtex-dialect 'aaa))
+              (biblio-format-bibtex (concat "@techreport{" stallman-bibtex))
+              (expect bibtex-dialect :to-equal 'aaa))))
         (it "uses font-lock-ensure when available"
           (unless (functionp #'font-lock-ensure)
             (let ((called-p t))
