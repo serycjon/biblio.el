@@ -638,9 +638,27 @@ With non-nil LABEL, use that instead of URL to label the button."
 
 (defun biblio-insert-result (item &optional no-sep)
   "Print a (prepared) bibliographic search result ITEM.
-See also `crossref--extract-interesting-fields' and
-`dblp--extract-interesting-fields'.  With NO-SEP, do not add
-space after the record."
+With NO-SEP, do not add space after the record.
+
+This command expects ITEM to be a single alist, in the following format:
+
+  ((title . \"Title of entry\")
+   (authors . (\"Author 1\" \"Author 2\" …))
+   (container . \"Where this was published (which journal, conference, …)\")
+   (type . \"Type of document (journal paper, proceedings, report, …)\")
+   (category . \"Category of this document (aka primary topic)\")
+   (publisher . \"Publisher of this document\")
+   (references . \"Identifier(s) of this document (DOI, DPLB id, Handle, …)\")
+   (open-access-status . \"Open access status of this document\")
+   (url . \"Relevant URL\"))
+
+Each of `container', `type', `category', `publisher',
+`references', and `open-access-status' may be a list; in that
+case, entries of the list are displayed comma-separated.  All
+entries are optional.
+
+`crossref--extract-interesting-fields' and `dblp--extract-interesting-fields'
+provide examples of how to build such a result."
   (biblio--with-text-property 'biblio-metadata item
     (let-alist item
       (biblio-with-fontification 'font-lock-function-name-face
@@ -742,9 +760,11 @@ term to feed this backend.
 
 `url': (one argument, QUERY) Create a URL to query the backend's API.
 
-`parse-buffer': (on argument, BUFFER) Parse the contents of
-BUFFER (current at the time of the call) and return a list of
-results.
+`parse-buffer': (no arguments) Parse the contents of the current
+buffer and return a list of results.  At the time of the call,
+the current buffer contains the results of querying a url
+returned by (THIS-BACKEND `url' QUERY).  The format of individual
+results is described in the docstring of `biblio-insert-result').
 
 `forward-bibtex': (two arguments, METADATA and FORWARD-TO)
 Produce a BibTeX record from METADATA (one of the elements of the
