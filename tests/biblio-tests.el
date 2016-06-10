@@ -32,7 +32,7 @@
 (require 'notifications)
 
 (defun biblio-tests--bypass-shut-up (&rest args)
-  "Show a (message ARGS) in a notiification."
+  "Show a (message ARGS) in a notification."
   (notifications-notify :body (apply #'format args)))
 
 (defconst stallman-bibtex "Stallman_1981, title={EMACS the extensible,
@@ -790,7 +790,8 @@ instead."
         (expect (buffer-string)
                 :to-equal (concat (biblio-format-bibtex (buffer-string)) "\n\n"))
         (expect (buffer-string)
-                :to-match "journal += {ACM SIGOA Newsletter}")))
+                :to-match "journal += {ACM SIGOA Newsletter}")
+        (expect url-mime-accept-string :to-equal nil)))
     (it "falls back to crosscite if doi.org returns a 406"
       (with-temp-buffer
         (let ((buf (current-buffer))
@@ -805,7 +806,8 @@ instead."
           (expect #'biblio-crossref-backend :not :to-have-been-called)
           (expect #'biblio-doi--crosscite-url :to-have-been-called)
           ;; Note lack of spacing, due to invalid BibTeX key being created by CrossCite
-          (expect (buffer-string) :to-match "author={Pit-Claudel")))))
+          (expect (buffer-string) :to-match "author={Pit-Claudel")
+          (expect url-mime-accept-string :to-equal nil)))))
 
   (describe "biblio-dissemin"
     (before-each
