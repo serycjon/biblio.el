@@ -372,11 +372,18 @@ Uses .url, and .doi as a fallback."
         (concat "https://doi.org/" (url-encode-url .doi))))))
 
 (defun biblio--selection-browse ()
-  "Open the current entry in a web browser."
+  "Open the web page of the current entry in a web browser."
   (interactive)
   (-if-let* ((url (biblio-get-url (biblio--selection-metadata-at-point))))
       (browse-url url)
     (user-error "This record does not contain a URL")))
+
+(defun biblio--selection-browse-direct ()
+  "Open the full text of the current entry in a web browser."
+  (interactive)
+  (-if-let* ((url (biblio-alist-get 'direct-url (biblio--selection-metadata-at-point))))
+      (browse-url url)
+    (user-error "This record does not contain a direct URL (try arXiv or HAL)")))
 
 (defun biblio--selection-next ()
   "Move to next seach result."
@@ -516,6 +523,8 @@ Interactively, query for ACTION from
     (define-key map (kbd "<down>") #'biblio--selection-next)
     (define-key map (kbd "C-n") #'biblio--selection-next)
     (define-key map (kbd "RET") #'biblio--selection-browse)
+    (define-key map (kbd "<C-return>") #'biblio--selection-browse-direct)
+    (define-key map (kbd "C-RET") #'biblio--selection-browse-direct)
     (define-key map (kbd "M-w") #'biblio--selection-copy)
     (define-key map (kbd "c") #'biblio--selection-copy)
     (define-key map (kbd "C-w") #'biblio--selection-copy-quit)
@@ -562,7 +571,8 @@ Interactively, query for ACTION from
          "\\[biblio--selection-insert],\\[biblio--selection-insert-quit]: Insert BibTex"
          "\\[biblio--selection-copy],\\[biblio--selection-copy-quit]: Copy BibTeX"
          "\\[biblio--selection-extended-action]: Extended action"
-         "\\[biblio--selection-change-buffer]: Change target buffer"))))))
+         "\\[biblio--selection-browse]: Open in browser"
+         "\\[biblio--selection-change-buffer]: Change buffer"))))))
 
 ;;; Printing search results
 
@@ -650,7 +660,8 @@ This command expects ITEM to be a single alist, in the following format:
    (publisher . \"Publisher of this document\")
    (references . \"Identifier(s) of this document (DOI, DPLB id, Handle, …)\")
    (open-access-status . \"Open access status of this document\")
-   (url . \"Relevant URL\"))
+   (url . \"Relevant URL\")
+   (direct-url . \"Direct URL of paper (typically PDF)\"))
 
 Each of `container', `type', `category', `publisher',
 `references', and `open-access-status' may be a list; in that
@@ -673,7 +684,9 @@ provide examples of how to build such a result."
         (biblio--insert-detail "  Publisher: " .publisher t)
         (biblio--insert-detail "  References: " .references t)
         (biblio--insert-detail "  Open Access: " .open-access-status t)
-        (biblio--insert-detail "  URL: " (biblio-make-url-button .url) t))
+        (biblio--insert-detail "  URL: " (list (biblio-make-url-button .url)
+                                         (biblio-make-url-button .direct-url))
+                         t))
       (unless no-sep
         (insert "\n\n")))))
 

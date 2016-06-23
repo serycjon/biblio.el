@@ -79,7 +79,12 @@ primaryClass = {%s}}"
 
 (defun biblio-arxiv--extract-id (id)
   "Extract identifier from ID, the URL of an arXiv abstract."
-  (replace-regexp-in-string "http://arxiv.org/abs/" "" id))
+  (replace-regexp-in-string "https?://arxiv.org/abs/" "" id))
+
+(defun biblio-arxiv--pdf-url (id)
+  "Extract PDF url from ID of an arXiv entry."
+  (when id
+    (concat "http://arxiv.org/pdf/" id)))
 
 (defconst biblio-arxiv--iso-8601-regexp
   (concat "\\`"
@@ -107,7 +112,8 @@ primaryClass = {%s}}"
                   (biblio-alist-get 'term (car .arxiv:primary_category)))
             (cons 'references (list (cadr .arxiv:doi) id))
             (cons 'type "eprint")
-            (cons 'url (biblio-alist-get 'href (car .link)))))))
+            (cons 'url (biblio-alist-get 'href (car .link)))
+            (cons 'direct-url (biblio-arxiv--pdf-url id))))))
 
 (defun biblio-arxiv--entryp (entry)
   "Check if ENTRY is an arXiv entry."

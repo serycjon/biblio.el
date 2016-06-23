@@ -394,7 +394,7 @@ month={Apr}, pages={147–156}}")
           (with-current-buffer results-buffer
             (goto-char (1- (point-max)))
             (expect #'biblio--selection-browse
-                    :to-throw 'error '("This record does not contain a URL"))))
+                    :to-throw 'user-error '("This record does not contain a URL"))))
         (it "lets users click buttons"
           (with-current-buffer results-buffer
             (expect (search-forward "http" nil t) :to-be-truthy)
@@ -433,7 +433,7 @@ month={Apr}, pages={147–156}}")
           (it "complains about empty entries"
             (with-temp-buffer
               (expect #'biblio--selection-copy
-                      :to-throw 'error '("No entry at point"))))))
+                      :to-throw 'user-error '("No entry at point"))))))
 
       (describe "a buffer change command"
         :var (new-target)
@@ -704,7 +704,8 @@ instead."
         :var (results-buffer)
         (before-each
           (biblio-tests--intercept-url-requests)
-          (spy-on #'read-string :and-return-value query))
+          (spy-on #'read-string :and-return-value query)
+          (spy-on #'browse-url))
 
         (it "downloads results properly"
           (expect
@@ -742,12 +743,23 @@ instead."
                  (expect (search-forward "References: " nil t) :to-be-truthy)
                  (expect (search-forward "URL: " nil t) :to-be-truthy)
                  (expect (button-label (button-at (1- (point-at-eol)))) :to-match "http://")
-                 (expect (search-backward "\n\n" nil t) :not :to-be-truthy))))
+                 (expect (search-backward "\n\n" nil t) :not :to-be-truthy)))
+             (it "complains about missing direct URLs"
+               (with-current-buffer results-buffer
+                 (biblio--selection-first)
+                 (expect #'biblio--selection-browse-direct
+                         :to-throw 'user-error '("This record does not contain a direct URL (try arXiv or HAL)")))))
             (`arxiv
              (it "shows affiliations"
                (with-current-buffer results-buffer
                  (biblio--selection-first)
-                 (expect (search-forward " (NMRC, University College, Cork, Ireland)" nil t) :to-be-truthy)))))
+                 (expect (search-forward " (NMRC, University College, Cork, Ireland)" nil t) :to-be-truthy)))
+             (it "opens the right URL when browsing to PDF"
+               (with-current-buffer results-buffer
+                 (biblio--selection-browse-direct)
+                 (expect 'browse-url
+                         :to-have-been-called-with
+                         "http://arxiv.org/pdf/cond-mat/0102536v1")))))
           (it "has no empty titles"
             (with-current-buffer results-buffer
               (expect (search-forward "\n\n> \n" nil t) :not :to-be-truthy)))
