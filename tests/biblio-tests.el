@@ -70,7 +70,7 @@ month={Apr}, pages={147–156}}")
   '(((backend . biblio-dblp-backend)
      (title . "Who builds a house without drawing blueprints?")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
-     (url . "http://dblp.org/rec/journals/cacm/Lamport15"))
+     (url . "http://dblp.org/rec/journals/cacm/Lamport15") (direct-url . "http://example.com/paper.pdf"))
     ((backend . biblio-dblp-backend)
      (title . "Turing lecture: The computer science of concurrency: the early years.")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
@@ -464,6 +464,28 @@ month={Apr}, pages={147–156}}")
             (expect #'biblio-dissemin--lookup-record
                     :to-have-been-called-with
                     (biblio--selection-metadata-at-point))))
+        (it "complains about missing entries"
+          (with-temp-buffer
+            (expect (lambda ()
+                      (call-interactively #'biblio--selection-extended-action))
+                    :to-throw 'user-error))))
+
+      (describe "--selection-extended-action for downloading"
+        (before-each
+          (spy-on 'biblio-completing-read-alist
+                  :and-return-value #'biblio-download--action)
+          (spy-on #'biblio-download--action :and-call-through)
+          (spy-on #'read-file-name :and-return-value "/target.pdf")
+          (spy-on #'url-copy-file))
+        (it "runs an action as expected"
+          (with-current-buffer results-buffer
+            (call-interactively #'biblio--selection-extended-action)
+            (expect #'biblio-download--action
+                    :to-have-been-called-with
+                    (biblio--selection-metadata-at-point))
+            (expect #'url-copy-file
+                    :to-have-been-called-with
+                    "http://example.com/paper.pdf" "/target.pdf")))
         (it "complains about missing entries"
           (with-temp-buffer
             (expect (lambda ()
