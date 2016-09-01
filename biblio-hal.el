@@ -77,6 +77,7 @@
             ;; "journalTitle_s" "volume_s" "issue_s"  "page_s" "writingDate_s"
             "label_bibtex" "files_s" "uri_s")))
 
+;;;###autoload
 (defun biblio-hal-backend (command &optional arg &rest more)
   "A HAL backend for biblio.el.
 COMMAND, ARG, MORE: See `biblio-backends'."

@@ -131,6 +131,7 @@ primaryClass = {%s}}"
   (format "http://export.arxiv.org/api/query?search_query=%s"
           (url-encode-url query)))
 
+;;;###autoload
 (defun biblio-arxiv-backend (command &optional arg &rest more)
   "A arXiv backend for biblio.el.
 COMMAND, ARG, MORE: See `biblio-backends'."
