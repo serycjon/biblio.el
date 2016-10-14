@@ -92,7 +92,7 @@ primaryClass = {%s}}"
     (let ((id (biblio-arxiv--extract-id (cadr .id))))
       (list (cons 'doi (cadr .arxiv:doi))
             (cons 'identifier id)
-            (cons 'year (elt (timezone-parse-date (cadr .published)) 0))
+            (cons 'year (aref (timezone-parse-date (cadr .published)) 0))
             (cons 'title (cadr .title))
             (cons 'authors (seq-map #'biblio-arxiv--format-author entry))
             (cons 'container (cadr .arxiv:journal_ref))
