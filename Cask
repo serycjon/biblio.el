@@ -2,7 +2,7 @@
 (source melpa)
 
 (package-file "biblio.el")
-(files "*.el" (:excludes "biblio-core.el"))
+(files "*.el")
 
 (depends-on "seq")
 (depends-on "dash")

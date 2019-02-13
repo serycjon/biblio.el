@@ -644,7 +644,8 @@ month={Apr}, pages={147–156}}")
   '((crossref "renear -ontologies" "Strategic Reading" biblio-crossref-backend)
     (dblp "author:lamport" "Who builds a house" biblio-dblp-backend)
     (hal "coq inria" "The Coq Proof Assistant" biblio-hal-backend)
-    (arxiv "all:electron" "Impact of Electron-Electron Cusp" biblio-arxiv-backend)))
+    (arxiv "all:electron" "Impact of Electron-Electron Cusp" biblio-arxiv-backend)
+    (ieee "common lisp proof" "An industrial strength" biblio-ieee-backend)))
 
 (defun biblio-tests--cache-file-path (fname)
   "Compute full name of cache file FNAME."

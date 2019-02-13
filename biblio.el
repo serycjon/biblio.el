@@ -1,4 +1,4 @@
-;;; biblio.el --- Browse and import bibliographic references from CrossRef, arXiv, DBLP, HAL, Dissemin, and doi.org -*- lexical-binding: t -*-
+;;; biblio.el --- Browse and import bibliographic references and BibTeX records from CrossRef, arXiv, DBLP, HAL, Dissemin, IEEE Xplore, and doi.org -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
@@ -89,6 +89,7 @@
 (require 'biblio-crossref)
 (require 'biblio-dblp)
 (require 'biblio-hal)
+(require 'biblio-ieee)
 (require 'biblio-dissemin)
 (require 'biblio-download)
 
