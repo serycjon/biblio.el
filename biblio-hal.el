@@ -22,8 +22,8 @@
 ;;
 ;; Lookup and download bibliographic records from HAL using `hal-lookup'.
 ;;
-;; This package uses `biblio-selection-mode', and plugs into the more general
-;; `biblio' package (which see for more documentation).
+;; This file implements a backend for the for the `biblio' package (which see for more
+;; documentation).
 
 ;;; Code:
 
