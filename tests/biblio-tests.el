@@ -35,6 +35,15 @@
   "Show a (message ARGS) in a notification."
   (notifications-notify :body (apply #'format args)))
 
+(defmacro biblio-tests--capture-warnings (&rest body)
+  "Capture and return warnings produced by BODY."
+  (declare (indent 0))
+  ;; https://github.com/jorgenschaefer/emacs-buttercup/issues/124
+  `(let ((buttercup-warning-buffer-name ""))
+     (shut-up
+       ,@body
+       (shut-up-current-output))))
+
 (defconst stallman-bibtex "Stallman_1981, title={EMACS the extensible,
 customizable self-documenting display editor}, volume={2},
 ISSN=\"0737-819X\",
@@ -177,19 +186,18 @@ month={Apr}, pages={147–156}}")
 
         (describe "-throw-on-unexpected-errors"
           (it "supports empty lists"
-            (expect (apply-partially #'biblio--throw-on-unexpected-errors
-                                     nil nil)
+            (expect (biblio--throw-on-unexpected-errors nil nil)
                     :not :to-throw))
           (it "supports whitelists"
-            (expect (apply-partially #'biblio--throw-on-unexpected-errors
-                                     `(,http-error--alist) `(,http-error--alist))
+            (expect (biblio--throw-on-unexpected-errors
+                     `(,http-error--alist) `(,http-error--alist))
                     :not :to-throw))
           (it "returns the first error"
-            (expect (apply-partially #'biblio--throw-on-unexpected-errors
-                                     `(,http-error--alist ,timeout-error--alist) nil)
+            (expect (biblio--throw-on-unexpected-errors
+                     `(,http-error--alist ,timeout-error--alist) nil)
                     :to-throw 'biblio--url-error '(http . 406))
-            (expect (apply-partially #'biblio--throw-on-unexpected-errors
-                                     `(,timeout-error--alist ,http-error--alist) nil)
+            (expect (biblio--throw-on-unexpected-errors
+                     `(,timeout-error--alist ,http-error--alist) nil)
                     :to-throw 'biblio--url-error 'timeout))))
 
       (describe "-generic-url-callback"
@@ -235,10 +243,10 @@ month={Apr}, pages={147–156}}")
                       :to-match "\\`Error"))
             (expect #'biblio-tests--dummy-callback :not :to-have-been-called))
           (it "swallows invalid response bodies"
-            (expect (lambda () (shut-up
-                                 (funcall (biblio-generic-url-callback
-                                           #'biblio-tests--dummy-callback #'ignore)
-                                          nil)))
+            (expect (shut-up
+                      (funcall (biblio-generic-url-callback
+                                #'biblio-tests--dummy-callback #'ignore)
+                               nil))
                     :not :to-throw)
             (expect #'biblio-tests--dummy-callback :not :to-have-been-called)
             (expect (buffer-live-p url-buffer) :to-be-truthy))
@@ -393,7 +401,7 @@ month={Apr}, pages={147–156}}")
         (it "complains about missing URLs"
           (with-current-buffer results-buffer
             (goto-char (1- (point-max)))
-            (expect #'biblio--selection-browse
+            (expect (biblio--selection-browse)
                     :to-throw 'user-error '("This record does not contain a URL"))))
         (it "lets users click buttons"
           (with-current-buffer results-buffer
@@ -432,7 +440,7 @@ month={Apr}, pages={147–156}}")
               (expect #'biblio-dblp-backend :to-have-been-called)))
           (it "complains about empty entries"
             (with-temp-buffer
-              (expect #'biblio--selection-copy
+              (expect (biblio--selection-copy)
                       :to-throw 'user-error '("No entry at point"))))))
 
       (describe "a buffer change command"
@@ -450,7 +458,7 @@ month={Apr}, pages={147–156}}")
           (with-current-buffer results-buffer
             (with-current-buffer new-target
               (setq buffer-read-only t))
-            (expect (lambda () (call-interactively #'biblio--selection-change-buffer))
+            (expect (call-interactively #'biblio--selection-change-buffer)
                     :to-throw 'user-error))))
 
       (describe "--selection-extended-action for Dissemin"
@@ -466,8 +474,7 @@ month={Apr}, pages={147–156}}")
                     (biblio--selection-metadata-at-point))))
         (it "complains about missing entries"
           (with-temp-buffer
-            (expect (lambda ()
-                      (call-interactively #'biblio--selection-extended-action))
+            (expect (call-interactively #'biblio--selection-extended-action)
                     :to-throw 'user-error))))
 
       (describe "--selection-extended-action for downloading"
@@ -488,8 +495,7 @@ month={Apr}, pages={147–156}}")
                     "http://example.com/paper.pdf" "/target.pdf")))
         (it "complains about missing entries"
           (with-temp-buffer
-            (expect (lambda ()
-                      (call-interactively #'biblio--selection-extended-action))
+            (expect (call-interactively #'biblio--selection-extended-action)
                     :to-throw 'user-error))))
 
       (dolist (func '(biblio-completing-read biblio-completing-read-alist))
@@ -575,43 +581,39 @@ month={Apr}, pages={147–156}}")
 
     (describe "-crossref--parse-search-results"
       (it "complains about non-ok statuses"
-        (expect (shut-up
+        (expect (biblio-tests--capture-warnings
                   (with-temp-buffer
                     (save-excursion (insert "{}"))
-                    (biblio-crossref--parse-search-results))
-                  (shut-up-current-output))
+                    (biblio-crossref--parse-search-results)))
                 :to-equal "Warning (biblio-crossref): CrossRef query failed\n"))))
 
   (describe "In the DBLP module"
 
     (describe "-dblp--parse-search-results"
       (it "complains about non-ok statuses"
-        (expect (shut-up
+        (expect (biblio-tests--capture-warnings
                   (with-temp-buffer
-                    (biblio-dblp--parse-search-results))
-                  (shut-up-current-output))
+                    (biblio-dblp--parse-search-results)))
                 :to-equal "Warning (biblio-dblp): DBLP query failed\n"))))
 
   (describe "In the HAL module"
 
     (describe "-hal--parse-search-results"
       (it "complains about missing results"
-        (expect (shut-up
+        (expect (biblio-tests--capture-warnings
                   (with-temp-buffer
                     (save-excursion (insert "{}"))
-                    (biblio-hal--parse-search-results))
-                  (shut-up-current-output))
+                    (biblio-hal--parse-search-results)))
                 :to-equal "Warning (biblio-hal): HAL query failed\n"))))
 
   (describe "In the Dissemin module"
 
     (describe "-dissemin-parse-record"
       (it "complains about non-ok statuses"
-        (expect (shut-up
+        (expect (biblio-tests--capture-warnings
                   (with-temp-buffer
                     (save-excursion (insert "{}"))
-                    (biblio-dissemin--parse-buffer))
-                  (shut-up-current-output))
+                    (biblio-dissemin--parse-buffer)))
                 :to-equal "Warning (biblio-dissemin): Dissemin query failed\n")))
 
     (describe "-dissemin--translate-classification"
@@ -627,8 +629,9 @@ month={Apr}, pages={147–156}}")
           (biblio-dissemin--lookup-record `((doi . ,doi)))
           (expect #'biblio-dissemin-lookup :to-have-been-called-with doi)))
       (it "complains if the record contains no DOI"
-        (expect (lambda () (biblio-dissemin--lookup-record nil))
-                :to-throw 'user-error '("Dissemin needs a DOI, but this record does not contain one"))
+        (expect (biblio-dissemin--lookup-record nil)
+                :to-throw 'user-error
+                '("Dissemin needs a DOI, but this record does not contain one"))
         (expect #'biblio-dissemin-lookup :not :to-have-been-called)))))
 
 (defconst biblio-tests--script-full-path
@@ -659,9 +662,6 @@ month={Apr}, pages={147–156}}")
               ("science.1157784" . "http://doi.org/10.1126/science.1157784")
               ("Lamport15" . "http://dblp.org/rec/bib2/journals/cacm/Lamport15")
               ("1.1383585" . "http://doi.org/10.1063/1.1383585")
-              ;; ("arxiv-higgs-response" . "http://export.arxiv.org/api/query?search_query=higgs%20boson")
-              ;; ("dissemin-higgs-boson" . "http://dissem.in/api/10.1016/j.physletb.2003.06.057")
-              ;; ("doi-higgs-boson" . "http://doi.org/10.1016/j.physletb.2003.06.057")
               ("dissemin-j.paid.2009.02.013" . "http://dissem.in/api/10.1016/j.paid.2009.02.013")
               ("dissemin-1159890.806466" . "http://dissem.in/api/10.1145/1159890.806466")
               ("dissemin-science.1157784" . "http://dissem.in/api/10.1126/science.1157784")
@@ -755,8 +755,9 @@ instead."
              (it "complains about missing direct URLs"
                (with-current-buffer results-buffer
                  (biblio--selection-first)
-                 (expect #'biblio--selection-browse-direct
-                         :to-throw 'user-error '("This record does not contain a direct URL (try arXiv or HAL)")))))
+                 (expect (biblio--selection-browse-direct)
+                         :to-throw 'user-error
+                         '("This record does not contain a direct URL (try arXiv or HAL)")))))
             (`arxiv
              (it "shows affiliations"
                (with-current-buffer results-buffer
