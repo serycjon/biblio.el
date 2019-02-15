@@ -580,6 +580,15 @@ month={Apr}, pages={147–156}}")
 
   (describe "In the CrossRef module"
 
+    (describe "-crossref--url"
+      (it "takes biblio-crossref-user-email-address into account"
+        (expect (let ((biblio-crossref-user-email-address "user@host"))
+                  (biblio-crossref--url "query"))
+                :to-match "query=query&mailto=user@host$")
+        (expect (let ((biblio-crossref-user-email-address nil))
+                  (biblio-crossref--url "query"))
+                :to-match "query=query$")))
+
     (describe "-crossref--parse-search-results"
       (it "complains about non-ok statuses"
         (expect (biblio-tests--capture-warnings
