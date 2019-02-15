@@ -66,7 +66,9 @@ list of results in `biblio-selection-mode`.  In that mode, use:
 ## Setup
 
 Add [MELPA](http://melpa.org/#/getting-started) to your package sources, then
-use `M-x package-install RET biblio RET`.
+use `M-x package-install RET biblio RET`.  To get [better response
+times](https://github.com/CrossRef/rest-api-doc#etiquette) from CrossRef, you
+may consider customizing `biblio-crossref-user-email-address`.
 
 ## Extending `biblio.el`
 
