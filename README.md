@@ -16,6 +16,7 @@ automatically fetched from well-curated sources, and formatted as BibTeX.
 * **arXiv**, an archive of pre-prints in various scientific fields
 * **DBLP**, a database of Computer Science publications
 * **HAL**, a French repository of Open Access publications
+* **IEEE Xplore**, a database of Computer Science and Electrical Engineering materials
 * **doi.org**, a DOI resolver (to retrieve BibTeX records from DOIs)
 * **CrossCite**, an alternative DOI resolver and BibTeX formatting service
 * **Dissemin**, a database tracking the open access status of scholarly articles
@@ -27,11 +28,13 @@ Quick start: `M-x biblio-lookup`.  Each source can also be accessed independentl
 * `M-x crossref-lookup` to query CrossRef
 * `M-x arxiv-lookup` to query arXiv
 * `M-x dblp-lookup` to query DBLP
+* `M-x hal-lookup` to query HAL
+* `M-x ieee-lookup` to query IEEE Xplore
 * `M-x doi-insert` to insert a BibTeX record by DOI
 * `M-x dissemin-lookup` to show information about the open access status of a
   particular DOI
 
-Most of these commands work together: for example, `crossref-lookup` displays a
+These commands work together: for example, `crossref-lookup` displays a
 list of results in `biblio-selection-mode`.  In that mode, use:
 
 * `RET` to visit the corresponding web page
