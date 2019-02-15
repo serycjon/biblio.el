@@ -784,6 +784,8 @@ instead."
                    (lambda (bib _meta) (setq bibtex bib))))))
             (it "is a string"
               (expect (stringp bibtex) :to-be-truthy))
+            (it "does not include text properties"
+              (expect (text-properties-at 0 bibtex) :to-equal nil))
             (it "is not empty"
               (expect (seq-empty-p bibtex) :not :to-be-truthy))
             (it "starts with @"

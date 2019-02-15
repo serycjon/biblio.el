@@ -143,7 +143,7 @@ With non-nil AUTOKEY, automatically generate a key for BIBTEX."
       (funcall biblio-cleanup-bibtex-function autokey))
     (if (fboundp 'font-lock-ensure) (font-lock-ensure)
       (with-no-warnings (font-lock-fontify-buffer)))
-    (buffer-string)))
+    (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun biblio--beginning-of-response-body ()
   "Move point to beginning of response body."
