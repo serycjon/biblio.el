@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Headers: X-Requested-With, Accept, Accept-Encoding, Accept-Charset, Accept-Language, Accept-Ranges, Cache-Control
+Access-Control-Expose-Headers: Link
+Link: <http://dx.doi.org/10.1109/32.588534>; rel="canonical", <http://xplorestaging.ieee.org/ielx1/32/12930/00588534.pdf?arnumber=588534>; version="vor"; rel="item"
+Content-Type: text/bibliography
+Content-Length: 423
+Server: http-kit
+Date: Thu, 14 Feb 2019 22:41:43 GMT
+X-Rate-Limit-Limit: 50
+X-Rate-Limit-Interval: 1s
+Connection: close
+
+ @article{Kaufmann_1997, title={An industrial strength theorem prover for a logic based on Common Lisp}, volume={23}, ISSN={0098-5589}, url={http://dx.doi.org/10.1109/32.588534}, DOI={10.1109/32.588534}, number={4}, journal={IEEE Transactions on Software Engineering}, publisher={Institute of Electrical and Electronics Engineers (IEEE)}, author={Kaufmann, M. and Moore, J.S.}, year={1997}, month={Apr}, pages={203–213}}
