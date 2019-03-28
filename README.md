@@ -103,7 +103,33 @@ backend will be added to the list of backends add that point.
 ### Adding new actions
 
 The selection mode menu has an extended action key, `x`.  The only extension at
-the moment is Dissemin. Extensions `cons`es `(label . function)` added to
-`biblio-selection-mode-actions-alist`; function is called with the metadata of
-the current entry when the user selects `label` from the list of extensions
-after pressing `x`.
+the moment is Dissemin. Extensions are `cons`es `(label . function)` added to
+`biblio-selection-mode-actions-alist`; `function` is called with the metadata of
+the current entry when the user selects `label` (a string) from the list of
+extensions after pressing `x`.  For example:
+
+```emacs-lisp
+(add-to-list 'biblio-selection-mode-actions-alist
+             '("Dissemin (find open access copies of this article)" .
+               biblio-dissemin--lookup-record))
+```
+
+Alternatively, end-users can add new actions directly to the selection menu by
+adding custom bindings to the `biblio-selection-mode-map` keymap.  For example,
+the following snippet defines a custom action that appends a bibtex entry for
+the current selection to the end of the file defined by `my/reference-bibfile`:
+
+```emacs-lisp
+(defun my/biblio--selection-insert-at-end-of-bibfile-callback (bibtex entry)
+  "Add BIBTEX (from ENTRY) to end of a user-specified bibtex file."
+  (with-current-buffer (find-file-noselect my/reference-bibfile)
+    (goto-char (point-max))
+    (insert bibtex))
+  (message "Inserted bibtex entry for %S."
+	   (biblio--prepare-title (biblio-alist-get 'title entry))))
+
+(defun ans/biblio-selection-insert-end-of-bibfile ()
+  "Insert BibTeX of current entry at the end of user-specified bibtex file."
+  (interactive)
+  (biblio--selection-forward-bibtex #'my/biblio--selection-insert-at-end-of-bibfile-callback))
+```
