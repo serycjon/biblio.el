@@ -225,7 +225,7 @@ month={Apr}, pages={147–156}}")
         (it "puts the point in the right spot"
           (with-current-buffer url-buffer
             (expect (funcall (biblio-generic-url-callback
-                              (lambda () (looking-at-p "And a response.")))
+                              (lambda () (looking-at-p "And a response\\.")))
                              nil)
                     :to-be-truthy)))
         (it "always kills the source buffer"
