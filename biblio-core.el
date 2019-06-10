@@ -112,7 +112,7 @@ DIALECT is `BibTeX' or `biblatex'.  AUTOKEY: see `biblio-format-bibtex'."
     (bibtex-clean-entry autokey)))
 
 (defun biblio--cleanup-bibtex (autokey)
-  "Default balue of `biblio-cleanup-bibtex-function'.
+  "Default value of `biblio-cleanup-bibtex-function'.
 AUTOKEY: See biblio-format-bibtex."
   (save-excursion
     (when (search-forward "@data{" nil t)
@@ -189,7 +189,7 @@ server's response is current at the time of the call, and killed
 after the call returns.  Call CLEANUP-FUNCTION before checking
 for errors.  If the request returns one of the errors in
 ALLOWED-ERRORS, CALLBACK is instead called with one argument, the
-list of alowed errors that occured instead of a buffer.  If the
+list of allowed errors that occurred instead of a buffer.  If the
 request returns another error, an exception is raised."
   (lambda (events)
     (let ((target-buffer (current-buffer)))
@@ -385,7 +385,7 @@ Uses .url, and .doi as a fallback."
     (user-error "This record does not contain a direct URL (try arXiv or HAL)")))
 
 (defun biblio--selection-next ()
-  "Move to next seach result."
+  "Move to next search result."
   (interactive)
   (biblio--selection-move #'end-of-line #'re-search-forward))
 
@@ -395,7 +395,7 @@ Uses .url, and .doi as a fallback."
   (biblio--selection-move #'ignore #'re-search-forward))
 
 (defun biblio--selection-previous ()
-  "Move to previous seach result."
+  "Move to previous search result."
   (interactive)
   (biblio--selection-move #'beginning-of-line #'re-search-backward))
 
@@ -657,7 +657,7 @@ This command expects ITEM to be a single alist, in the following format:
    (type . \"Type of document (journal paper, proceedings, report, …)\")
    (category . \"Category of this document (aka primary topic)\")
    (publisher . \"Publisher of this document\")
-   (references . \"Identifier(s) of this document (DOI, DPLB id, Handle, …)\")
+   (references . \"Identifier(s) of this document (DOI, DBLP id, Handle, …)\")
    (open-access-status . \"Open access status of this document\")
    (url . \"Relevant URL\")
    (direct-url . \"Direct URL of paper (typically PDF)\"))
