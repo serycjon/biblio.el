@@ -6,7 +6,7 @@
 ;; Version: 0.2
 ;; Package-Requires: ((emacs "24.3") (let-alist "1.0.4") (seq "1.11") (dash "2.12.1"))
 ;; Keywords: bib, tex, convenience, hypermedia
-;; URL: http://github.com/cpitclaudel/biblio.el
+;; URL: https://github.com/cpitclaudel/biblio.el
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; A framework for browsing bibliographic search results.  This is the core
@@ -646,6 +646,15 @@ With non-nil LABEL, use that instead of URL to label the button."
                           'action #'biblio--browse-url)
       (buffer-string))))
 
+(defun biblio--references-redundant-p (references url)
+  "Check whether REFERENCES are all containted in URL.
+
+This is commonly the case with DOIs, which don't need to be
+displayed if they are already in the `dx.doi.org' url."
+  (and (stringp url)
+       (seq-every-p (lambda (ref) (string-match-p (regexp-quote ref) url))
+                    references)))
+
 (defun biblio-insert-result (item &optional no-sep)
   "Print a (prepared) bibliographic search result ITEM.
 With NO-SEP, do not add space after the record.
@@ -683,7 +692,13 @@ provide examples of how to build such a result."
         (biblio--insert-detail "  Type: " .type t)
         (biblio--insert-detail "  Category: " .category t)
         (biblio--insert-detail "  Publisher: " .publisher t)
-        (biblio--insert-detail "  References: " .references t)
+        ;; (-when-let* ((year (and (numberp .year) (number-to-string .year))))
+        ;;   (if .publisher
+        ;;       (insert (format " (%s)" year))
+        ;;     (biblio--insert-detail "  Publication date: " year t)))
+        (let ((references (remq nil .references)))
+          (unless (biblio--references-redundant-p references .url)
+            (biblio--insert-detail "  References: " references t)))
         (biblio--insert-detail "  Open Access: " .open-access-status t)
         (biblio--insert-detail "  URL: " (list (biblio-make-url-button .url)
                                          (biblio-make-url-button .direct-url))

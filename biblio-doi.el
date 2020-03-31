@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
 ;; Author: Clément Pit-Claudel <clement.pitclaudel@live.com>
-;; URL: http://github.com/cpitclaudel/biblio.el
+;; URL: https://github.com/cpitclaudel/biblio.el
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 ;;; Commentary:
@@ -35,14 +35,14 @@
 
 (defun biblio-doi--dx-url (doi)
   "Create a doi.org url for DOI."
-  (format "http://doi.org/%s" doi))
+  (format "https://doi.org/%s" doi))
 
 (defun biblio-doi--crosscite-url (doi)
   "Create a crosscite URL to use as a fallback for DOI.
 Not all content providers provide BibTeX formatted entries, so
 instead of failing reroute the request through crosscite, which
 requests a generic format and crates the BibTeX on its own."
-  (format "http://crosscite.org/citeproc/format?doi=%s&style=bibtex&lang=en-US" doi))
+  (format "https://crosscite.org/citeproc/format?doi=%s&style=bibtex&lang=en-US" doi))
 
 (defconst biblio-doi--dx-mime-accept
   ;; “Accept:” header; Zenodo recognize x-bibtex but not text/bibliography

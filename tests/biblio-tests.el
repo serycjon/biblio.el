@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
 ;; Author: Clément Pit-Claudel <clement.pitclaudel@live.com>
-;; URL: http://github.com/cpitclaudel/biblio.el
+;; URL: https://github.com/cpitclaudel/biblio.el
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -47,7 +47,7 @@
 (defconst stallman-bibtex "Stallman_1981, title={EMACS the extensible,
 customizable self-documenting display editor}, volume={2},
 ISSN=\"0737-819X\",
-url={http://dx.doi.org/10.1145/1159890.806466},
+url={https://dx.doi.org/10.1145/1159890.806466},
 DOI={10.1145/1159890.806466}, number={1-2}, journal={ACM SIGOA
 Newsletter}, publisher={Association for Computing
 Machinery (ACM)}, author={Stallman, Richard M.}, year={1981},
@@ -64,7 +64,7 @@ month={Apr}, pages={147–156}}")
   pages	       = {147–156},
   issn	       = {0737-819X},
   doi	       = {10.1145/1159890.806466},
-  url	       = {http://dx.doi.org/10.1145/1159890.806466},
+  url	       = {https://dx.doi.org/10.1145/1159890.806466},
   journal      = {ACM SIGOA Newsletter},
   publisher    = {Association for Computing Machinery (ACM)}
 }")
@@ -79,30 +79,30 @@ month={Apr}, pages={147–156}}")
   '(((backend . biblio-dblp-backend)
      (title . "Who builds a house without drawing blueprints?")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
-     (url . "http://dblp.org/rec/journals/cacm/Lamport15") (direct-url . "http://example.com/paper.pdf"))
+     (url . "https://dblp.org/rec/journals/cacm/Lamport15") (direct-url . "https://example.com/paper.pdf"))
     ((backend . biblio-dblp-backend)
      (title . "Turing lecture: The computer science of concurrency: the early years.")
      (authors "Leslie Lamport") (container . "Commun. ACM") (type . "Journal Articles")
-     (url . "http://dblp.org/rec/journals/cacm/Lamport15a"))
+     (url . "https://dblp.org/rec/journals/cacm/Lamport15a"))
     ((backend . biblio-dblp-backend)
      (title . "An incomplete history of concurrency chapter 1. 1965-1977.")
      (authors "Leslie Lamport") (container . "PODC") (type . "Conference and Workshop Papers")
-     (url . "http://dblp.org/rec/conf/podc/Lamport13"))
+     (url . "https://dblp.org/rec/conf/podc/Lamport13"))
     ((backend . biblio-dblp-backend)
      (title . "Euclid Writes an Algorithm: A Fairytale.")
      (authors "Leslie Lamport") (container . "Int. J. Software and Informatics") (type . "Journal Articles")
-     (url . "http://dblp.org/rec/journals/ijsi/Lamport11"))
+     (url . "https://dblp.org/rec/journals/ijsi/Lamport11"))
     ((backend . biblio-crossref-backend)
      (title . "Fast Paxos") (authors "Leslie Lamport")
      (publisher . "Springer Science + Business Media") (container . ["Distrib. Comput." "Distributed Computing"])
      (references "10.1007/s00446-006-0005-x") (type . "journal-article")
-     (doi . "10.1007/s00446-006-0005-x") (url . "http://dx.doi.org/10.1007/s00446-006-0005-x"))
+     (doi . "10.1007/s00446-006-0005-x") (url . "https://dx.doi.org/10.1007/s00446-006-0005-x"))
     ((backend . biblio-crossref-backend)
      (title . "Brief Announcement: Leaderless Byzantine Paxos") (authors "Leslie Lamport")
      (publisher . "Springer Science + Business Media")
      (container . ["Lecture Notes in Computer Science" "Distributed Computing"])
      (references "10.1007/978-3-642-24100-0_10")
-     (type . "book-chapter") (url . "http://dx.doi.org/10.1007/978-3-642-24100-0_10"))
+     (type . "book-chapter") (url . "https://dx.doi.org/10.1007/978-3-642-24100-0_10"))
     ((backend . biblio-dblp-backend)
      (title . "Implementing dataflow with threads.")
      (authors "Leslie Lamport") (container . "Distributed Computing") (type . "Journal Articles")
@@ -260,9 +260,9 @@ month={Apr}, pages={147–156}}")
 
       (describe "-cleanup-doi"
         (it "Handles prefixes properly"
-          (expect (biblio-cleanup-doi "http://dx.doi.org/10.5281/zenodo.44331")
+          (expect (biblio-cleanup-doi "https://dx.doi.org/10.5281/zenodo.44331")
                   :to-equal "10.5281/zenodo.44331")
-          (expect (biblio-cleanup-doi "http://doi.org/10.5281/zenodo.44331")
+          (expect (biblio-cleanup-doi "https://doi.org/10.5281/zenodo.44331")
                   :to-equal "10.5281/zenodo.44331"))
         (it "trims spaces"
           (expect (biblio-cleanup-doi "   10.5281/zenodo.44331 \n\t\r ")
@@ -397,7 +397,7 @@ month={Apr}, pages={147–156}}")
             (biblio--selection-browse)
             (expect 'browse-url
                     :to-have-been-called-with
-                    "http://dblp.org/rec/journals/cacm/Lamport15")))
+                    "https://dblp.org/rec/journals/cacm/Lamport15")))
         (it "complains about missing URLs"
           (with-current-buffer results-buffer
             (goto-char (1- (point-max)))
@@ -492,7 +492,7 @@ month={Apr}, pages={147–156}}")
                     (biblio--selection-metadata-at-point))
             (expect #'url-copy-file
                     :to-have-been-called-with
-                    "http://example.com/paper.pdf" "/target.pdf")))
+                    "https://example.com/paper.pdf" "/target.pdf")))
         (it "complains about missing entries"
           (with-temp-buffer
             (expect (call-interactively #'biblio--selection-extended-action)
@@ -669,15 +669,15 @@ month={Apr}, pages={147–156}}")
 (defconst biblio-tests--cache
   (seq-map (lambda (pair) (cons (biblio-tests--cache-file-path (car pair)) (cdr pair)))
            (append
-            '(("1159890.806466" . "http://doi.org/10.1145/1159890.806466")
-              ("science.1157784" . "http://doi.org/10.1126/science.1157784")
-              ("Lamport15" . "http://dblp.org/rec/bib2/journals/cacm/Lamport15")
-              ("1.1383585" . "http://doi.org/10.1063/1.1383585")
-              ("10.1109-32.588534" . "http://doi.org/10.1109/32.588534")
-              ("dissemin-j.paid.2009.02.013" . "http://dissem.in/api/10.1016/j.paid.2009.02.013")
-              ("dissemin-1159890.806466" . "http://dissem.in/api/10.1145/1159890.806466")
-              ("dissemin-science.1157784" . "http://dissem.in/api/10.1126/science.1157784")
-              ("crosscite-zenodo.44331" . "http://crosscite.org/citeproc/format?doi=10.5281/zenodo.44331&style=bibtex&lang=en-US"))
+            '(("1159890.806466" . "https://doi.org/10.1145/1159890.806466")
+              ("science.1157784" . "https://doi.org/10.1126/science.1157784")
+              ("Lamport15" . "https://dblp.org/rec/bib2/journals/cacm/Lamport15")
+              ("1.1383585" . "https://doi.org/10.1063/1.1383585")
+              ("10.1109-32.588534" . "https://doi.org/10.1109/32.588534")
+              ("dissemin-j.paid.2009.02.013" . "https://dissem.in/api/10.1016/j.paid.2009.02.013")
+              ("dissemin-1159890.806466" . "https://dissem.in/api/10.1145/1159890.806466")
+              ("dissemin-science.1157784" . "https://dissem.in/api/10.1126/science.1157784")
+              ("crosscite-zenodo.44331" . "https://crosscite.org/citeproc/format?doi=10.5281/zenodo.44331&style=bibtex&lang=en-US"))
             (seq-map (lambda (test)
                        (pcase test
                          (`(,server ,query . ,_)
@@ -697,8 +697,12 @@ With FORCE, update existing records."
           (write-file fpath)
           (kill-buffer))))))
 
+(defun biblio-tests--strip-proto (url)
+  "Remove the protocol (http[s]:) part of URL."
+  (replace-regexp-in-string "^https?:" "" url))
+
 (defconst biblio-tests--reverse-cache
-  (seq-map (lambda (p) (cons (cdr p) (car p))) biblio-tests--cache))
+  (seq-map (lambda (p) (cons (biblio-tests--strip-proto (cdr p)) (car p))) biblio-tests--cache))
 
 (defmacro biblio-tests--intercept-url-requests (&optional which-events)
   "Set up buttercup to intercept URL queries.
@@ -710,7 +714,8 @@ instead."
            :and-call-fake
            (lambda (url callback &optional cbargs)
              (with-temp-buffer
-               (-if-let* ((file-name (cdr (assoc url biblio-tests--reverse-cache))))
+               (-if-let* ((url (biblio-tests--strip-proto url))
+                          (file-name (cdr (assoc url biblio-tests--reverse-cache))))
                    (progn
                      (insert-file-contents-literally file-name nil)
                      (apply callback nil cbargs))
@@ -760,9 +765,8 @@ instead."
                  (expect (search-forward "In: " nil t) :to-be-truthy)
                  (expect (search-forward "Type: " nil t) :to-be-truthy)
                  (expect (search-forward "Publisher: " nil t) :to-be-truthy)
-                 (expect (search-forward "References: " nil t) :to-be-truthy)
                  (expect (search-forward "URL: " nil t) :to-be-truthy)
-                 (expect (button-label (button-at (1- (point-at-eol)))) :to-match "http://")
+                 (expect (button-label (button-at (1- (point-at-eol)))) :to-match "https?://")
                  (expect (search-backward "\n\n" nil t) :not :to-be-truthy)))
              (it "complains about missing direct URLs"
                (with-current-buffer results-buffer
@@ -780,7 +784,7 @@ instead."
                  (biblio--selection-browse-direct)
                  (expect 'browse-url
                          :to-have-been-called-with
-                         "http://arxiv.org/pdf/cond-mat/0102536v1")))))
+                         "https://arxiv.org/pdf/cond-mat/0102536v1")))))
           (it "has no empty titles"
             (with-current-buffer results-buffer
               (expect (search-forward "\n\n> \n" nil t) :not :to-be-truthy)))
@@ -833,8 +837,8 @@ instead."
               (output (shut-up
                         (doi-insert-bibtex "10.5281/zenodo.44331")
                         (shut-up-current-output))))
-          (expect output :to-match "\\`Fetching http://doi")
-          (expect output :to-match "^Fetching http://crosscite.org")
+          (expect output :to-match "\\`Fetching https://doi")
+          (expect output :to-match "^Fetching https://crosscite.org")
           (expect (current-buffer) :to-be buf)
           (expect (buffer-live-p buf) :to-be-truthy)
           (expect #'biblio-insert-results :not :to-have-been-called)
@@ -848,7 +852,7 @@ instead."
     (before-each
       (biblio-tests--intercept-url-requests))
 
-    (dolist (doi '("http://doi.org/10.1145/1159890.806466" "10.1016/j.paid.2009.02.013" "10.1126/science.1157784"))
+    (dolist (doi '("https://doi.org/10.1145/1159890.806466" "10.1016/j.paid.2009.02.013" "10.1126/science.1157784"))
       (describe (format "(for DOI %S)" doi)
         :var (buf)
         (it "creates a results buffer properly"
@@ -868,7 +872,7 @@ instead."
               (expect (search-forward ">> ft" nil t) :to-be-truthy)))
           (it "hyperlinks URLs"
             (with-current-buffer buf
-              (expect (search-forward "  http://" nil t) :to-be-truthy)
+              (expect (re-search-forward "  https?://" nil t) :to-be-truthy)
               (expect (button-at (point)) :to-be-truthy)))
           (it "does not duplicate urls inside a given record"
             (with-temp-buffer

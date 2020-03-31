@@ -22,9 +22,9 @@
     (insert-file-contents-literally
      (expand-file-name
       (pcase url
-        ("http://export.arxiv.org/api/query?search_query=higgs%20boson" "arxiv-higgs-boson")
-        ("http://dissem.in/api/10.1016/j.physletb.2003.06.057" "dissemin-higgs-boson")
-        ("http://doi.org/10.1016/j.physletb.2003.06.057" "doi-higgs-boson")
+        ("https://export.arxiv.org/api/query?search_query=higgs%20boson" "arxiv-higgs-boson")
+        ("https://dissem.in/api/10.1016/j.physletb.2003.06.057" "dissemin-higgs-boson")
+        ("https://doi.org/10.1016/j.physletb.2003.06.057" "doi-higgs-boson")
         (_ (error "Unexpected URL")))
       biblio-screenshots--script-dir))
     (current-buffer)))
