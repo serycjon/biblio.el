@@ -104,8 +104,7 @@ Also see `biblio-cleanup-bibtex-function'.")
 DIALECT is `BibTeX' or `biblatex'.  AUTOKEY: see `biblio-format-bibtex'."
   (let ((bibtex-entry-format biblio--bibtex-entry-format)
         (bibtex-align-at-equal-sign t)
-        (bibtex-autokey-edit-before-use nil)
-        (bibtex-autokey-year-title-separator ":"))
+        (bibtex-autokey-edit-before-use nil))
     ;; Use biblatex to allow for e.g. @Online
     ;; Use BibTeX to allow for e.g. @TechReport
     (bibtex-set-dialect dialect t)

@@ -140,8 +140,9 @@ month={Apr}, pages={147–156}}")
           (expect (biblio-format-bibtex (concat "@ARTIcle{" stallman-bibtex))
                   :to-equal (concat "@Article{Stallman_1981," stallman-bibtex-clean)))
         (it "properly creates keys"
-          (expect (biblio-format-bibtex (concat "@article{" stallman-bibtex) t)
-                  :to-equal (concat "@Article{stallman81:emacs," stallman-bibtex-clean)))
+          (expect (let ((bibtex-autokey-year-title-separator "!"))
+                    (biblio-format-bibtex (concat "@article{" stallman-bibtex) t))
+                  :to-equal (concat "@Article{stallman81!emacs," stallman-bibtex-clean)))
         (it "replaces the “@data{” header"
           (expect (biblio-format-bibtex (concat "@data{" stallman-bibtex))
                   :to-match "\\`@misc{"))
