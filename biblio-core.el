@@ -3,7 +3,7 @@
 ;; Copyright (C) 2016  Clément Pit-Claudel
 
 ;; Author: Clément Pit-Claudel <clement.pitclaudel@live.com>
-;; Version: 0.2
+;; Version: 0.2.1
 ;; Package-Requires: ((emacs "24.3") (let-alist "1.0.4") (seq "1.11") (dash "2.12.1"))
 ;; Keywords: bib, tex, convenience, hypermedia
 ;; URL: https://github.com/cpitclaudel/biblio.el
@@ -442,6 +442,13 @@ Uses .url, and .doi as a fallback."
   (or (get-text-property (point) 'biblio-metadata)
       (user-error "No entry at point")))
 
+(defcustom biblio-bibtex-use-autokey nil
+  "Whether to generate new BibTeX keys for inserted entries."
+  :type '(choice (const :tag "Keep original BibTeX keys" nil)
+                 (const :tag "Generate new BibTeX keys" t))
+  :group 'biblio
+  :package-version '(biblio . "0.2.1"))
+
 (defun biblio--selection-forward-bibtex (forward-to &optional quit)
   "Retrieve BibTeX for entry at point and pass it to FORWARD-TO.
 If QUIT is set, also kill the results buffer."
@@ -452,7 +459,10 @@ If QUIT is set, also kill the results buffer."
                'forward-bibtex metadata
                (lambda (bibtex)
                  (with-current-buffer results-buffer
-                   (funcall forward-to (biblio-format-bibtex bibtex) metadata))))
+                   (funcall
+                    forward-to
+                    (biblio-format-bibtex bibtex biblio-bibtex-use-autokey)
+                    metadata))))
       (when quit (quit-window)))))
 
 (defun biblio--selection-change-buffer (buffer-name)
