@@ -138,10 +138,10 @@ With non-nil AUTOKEY, automatically generate a key for BIBTEX."
     (bibtex-mode)
     (save-excursion
       (insert (biblio-strip bibtex)))
-    (when (functionp biblio-cleanup-bibtex-function)
-      (funcall biblio-cleanup-bibtex-function autokey))
     (if (fboundp 'font-lock-ensure) (font-lock-ensure)
       (with-no-warnings (font-lock-fontify-buffer)))
+    (when (functionp biblio-cleanup-bibtex-function)
+      (funcall biblio-cleanup-bibtex-function autokey))
     (buffer-substring-no-properties (point-min) (point-max))))
 
 (defun biblio--beginning-of-response-body ()
