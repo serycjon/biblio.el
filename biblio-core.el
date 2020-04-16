@@ -112,7 +112,7 @@ DIALECT is `BibTeX' or `biblatex'.  AUTOKEY: see `biblio-format-bibtex'."
 
 (defun biblio--cleanup-bibtex (autokey)
   "Default value of `biblio-cleanup-bibtex-function'.
-AUTOKEY: See biblio-format-bibtex."
+AUTOKEY: See `biblio-format-bibtex'."
   (save-excursion
     (when (search-forward "@data{" nil t)
       (replace-match "@misc{")))

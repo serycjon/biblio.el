@@ -38,8 +38,7 @@
                               (lambda () ;; No allowed errors, so no arguments
                                 "Parse DBLP BibTeX results."
                                 (funcall forward-to
-                                         (biblio-format-bibtex
-                                          (biblio-response-as-utf-8))))))))
+                                         (biblio-response-as-utf-8)))))))
 
 (defun biblio-dblp--extract-interesting-fields (item)
   "Prepare a DBLP search result ITEM for display."

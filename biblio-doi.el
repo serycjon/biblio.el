@@ -45,7 +45,7 @@ requests a generic format and crates the BibTeX on its own."
   (format "https://crosscite.org/citeproc/format?doi=%s&style=bibtex&lang=en-US" doi))
 
 (defconst biblio-doi--dx-mime-accept
-  ;; “Accept:” header; Zenodo recognize x-bibtex but not text/bibliography
+  ;; “Accept:” header; Zenodo recognizes x-bibtex but not text/bibliography
   "text/bibliography;style=bibtex, application/x-bibtex")
 
 (defun biblio-doi--set-mime-accept ()
@@ -68,9 +68,7 @@ requests a generic format and crates the BibTeX on its own."
 (defun biblio-doi--generic-url-callback-1 (errors forward-to)
   "Helper function for `biblio-doi--generic-url-callback'.
 ERRORS, FORWARD-TO: see there."
-  (funcall forward-to
-           (unless errors
-             (biblio-format-bibtex (biblio-response-as-utf-8)))))
+  (funcall forward-to (unless errors (biblio-response-as-utf-8))))
 
 (defun biblio-doi--generic-url-callback (cleanup-fn forward-to)
   "Make an URL-ready callback.
@@ -117,7 +115,8 @@ FORWARD-TO is the callback to call with the results of the search."
   (let ((target-buffer (current-buffer)))
     (biblio-doi-forward-bibtex
      (biblio-cleanup-doi doi)
-     (lambda (result) (biblio-doi--insert result target-buffer)))))
+     (lambda (result)
+       (biblio-doi--insert (biblio-format-bibtex result) target-buffer)))))
 
 (provide 'biblio-doi)
 ;;; biblio-doi.el ends here
