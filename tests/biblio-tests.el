@@ -832,6 +832,15 @@ instead."
         (expect (buffer-string)
                 :to-match "journal += {ACM SIGOA Newsletter}")
         (expect url-mime-accept-string :to-equal nil)))
+    (it "honors biblio-use-autokey"
+      (with-temp-buffer
+        (shut-up (let ((biblio-bibtex-use-autokey t))
+                   (doi-insert-bibtex "10.1145/1159890.806466")))
+        (expect (buffer-string)
+                :to-equal (concat (biblio-format-bibtex (buffer-string) t) "\n\n"))
+        (expect (buffer-string)
+                :to-match "journal += {ACM SIGOA Newsletter}")
+        (expect url-mime-accept-string :to-equal nil)))
     (it "falls back to crosscite if doi.org returns a 406"
       (with-temp-buffer
         (let ((buf (current-buffer))
