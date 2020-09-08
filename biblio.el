@@ -90,6 +90,7 @@
 (require 'biblio-dblp)
 (require 'biblio-hal)
 (require 'biblio-ieee)
+(require 'biblio-gscholar)
 (require 'biblio-dissemin)
 (require 'biblio-download)
 
